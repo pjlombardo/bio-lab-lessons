@@ -126,7 +126,7 @@ Having surveyed the plot we want to build, we can now describe the data frame we
 2. Because of our axis aesthetics, we need to `group_by()` the `Treatment` variable, and `summarize()` to get the mean `pH` for each group.
 3. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev.
 
-### Exercise
+### Exercise: filtering
 Recall that we only want rows where `Time` equals (`==`) the "72hr" mark.  Use the code chunk below, with the `filter` command, to do this and check your work by sifting through the data frame.
 ```{r filter, exercise = TRUE, exercise.lines=3}
 experiment %>%
@@ -146,17 +146,157 @@ experiment %>%
 ```
 
 
-```{r group-by-setup, include =FALSE}
+## Summarizing by group
+Now that we have filtered our data frame, we can begin creating the summary data we need to create our plot.  Since we want to compute summaries for each `Treatment` group, we need to
 
+1. Take our data frame and `group_by()` the `Treatment` variable, then
+2. `summarize()` the appropriate variable (`pH`) using `R` functions
+
+In particular, we will need the `mean()` function and the `sd()` function to compute the mean and standard deviation of the `pH` variable.
+
+### Exercise: summary statistics for pH
+Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.
+```{r group-by, exercise = TRUE, exercise.lines=6}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(...) %>%
+    summarize(...)
+```
+```{r group-by-hint-1}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(...)
+```
+```{r group-by-hint-2}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = ..., # write your computation
+            std.dev_pH = ...   # write your computation
+             )
+```
+```{r group-by-solution}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH), # write your computation
+            std.dev_pH = sd(pH)   # write your computation
+             )
 ```
 
+## Adding variables for the error-bars
+We are almost done preparing our data for the `ggplot()` we are designing. Our last task is to add to our data frame of summary statistics (mean and std. deviation).  Recall that `mutate(new_var = values)` is our method for creating new variables.  Specifically, we want to add
 
+* `low`: a value for the lower end of our error-bar, created by taking `average_pH - 2*std.dev_pH`; and
+* `high`: a value for the lower end of our error-bar, created by taking `average_pH + 2*std.dev_pH`
+
+### Exercise: adding `low` and `high` variables to our summary table.
+Fill in the `mutate()` code below, which we added to our work from the previous two sections.
+```{r mutate, exercise = TRUE, exercise.lines=9}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+    mutate(...)
+```
+```{r mutate-hint-1}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+    mutate(low = ...,
+           high = ...)
+```
+```{r mutate-hint-2}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+    mutate(low = average_pH - 2*std.dev_pH,
+           high = ...)
+```
+```{r mutate-solution}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+    mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH)
+```
+
+### Amazing!
+The data frame we created over the three sections contains all the information we need to pass to `ggplot()` in order to create our visual.  In the next two sections, we will build our plot in stages.
+
+Onward!
 
 ## Incrementally building our plot
+Before continuing, it helps to save the summary data frame we created for plotting purposes.  The code below accomplishes this by adding a `-> plot_df` to the last line of the code. This essentially saves our work under the name `plot_df`, so that we can reference it later.
+```
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+    mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH) -> plot_df
+```
 
-#### Start the `ggplot()` with `data =` and `aes()`thetics
+### Start the `ggplot()` with `data =` and `aes()`thetics
+Equipped with `plot_df`, we are ready to start creating out plot.  As a brief reminder, remember our general syntax is 
+```
+ggplot(data = df_name, 
+       aes(x = ..., y = ..., ...))
+```
+where 
 
-#### Add `geom_*`-etries to visualize the data
+* `df_name` is the data frame from which we pull our information
+* `aes()` sets our global aesthetics, like `x` for our $x$-axis and `y` for our $y$-axis, and potentially more.
+
+#### Exercise: setting up axes.
+Complete the code below to link our plot to `plot_df`, and set the `x` and `y` aesthetics.  Remeber we want the treatment group on the $x$-axis and the average pH on the $y$-axis.
+```{r axes-setup, inclue = FALSE}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+    mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH) -> plot_df
+```
+
+```{r axes, exercise = TRUE, exercise.lines=4}
+ggplot(data = ...,
+       aes(x = ...,
+           y = ...))
+```
+```{r axes-hint-1}
+ggplot(data = plot_df,
+       aes(x = ...,
+           y = ...))
+```
+```{r axes-hint-2}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = ...))
+```
+```{r axes-solution}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH))
+```
+
+### Exercise: adding the first geometry
+
+
+
+## Adding error-bars, finishing touches
+* add error-bars, 
+* start y-axis at zero (`scale_y_continuous(limits=c(0,6.5))`)
 
 #### `scale_*` your `aes()`thetics 
 
