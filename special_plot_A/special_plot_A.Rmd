@@ -258,7 +258,7 @@ where
 * `aes()` sets our global aesthetics, like `x` for our $x$-axis and `y` for our $y$-axis, and potentially more.
 
 #### Exercise: setting up axes.
-Complete the code below to link our plot to `plot_df`, and set the `x` and `y` aesthetics.  Remeber we want the treatment group on the $x$-axis and the average pH on the $y$-axis.
+Complete the code below to link our plot to `plot_df`, and set the `x` and `y` aesthetics.  Remember we want the treatment group on the $x$-axis and the average pH on the $y$-axis.
 ```{r axes-setup, inclue = FALSE}
 experiment %>% 
     filter(Time=="72hr") %>%
