@@ -119,14 +119,14 @@ Hopefully, the recipe for constructing this plot is starting to take form.  In t
 
 Ready to get plotting?
 
-## Preparing a plotting data frame
+## Preparing a plotting data frame {data-progressive=TRUE}
 Having surveyed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
 
 1. Since we are dealing with `pH`, which was only measured at the end of the experiment, we need to `filter()` to only keep rows where `Time` equals "72hr".
 2. Because of our axis aesthetics, we need to `group_by()` the `Treatment` variable, and `summarize()` to get the mean `pH` for each group.
 3. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev.
 
-### Exercise: filtering
+### Step 1: filtering
 Recall that we only want rows where `Time` equals (`==`) the "72hr" mark.  Use the code chunk below, with the `filter` command, to do this and check your work by sifting through the data frame.
 ```{r filter, exercise = TRUE, exercise.lines=3}
 experiment %>%
@@ -146,7 +146,7 @@ experiment %>%
 ```
 
 
-## Summarizing by group
+### Step 2: summarizing by group
 Now that we have filtered our data frame, we can begin creating the summary data we need to create our plot.  Since we want to compute summaries for each `Treatment` group, we need to
 
 1. Take our data frame and `group_by()` the `Treatment` variable, then
@@ -154,8 +154,9 @@ Now that we have filtered our data frame, we can begin creating the summary data
 
 In particular, we will need the `mean()` function and the `sd()` function to compute the mean and standard deviation of the `pH` variable.
 
-### Exercise: summary statistics for pH
-Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.
+#### Exercise: summary statistics for pH
+Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.  Use the following names for these variables: `average_pH` and `std.dev_pH`.
+
 ```{r group-by, exercise = TRUE, exercise.lines=6}
 experiment %>% 
     filter(Time=="72hr") %>%
@@ -185,13 +186,13 @@ experiment %>%
              )
 ```
 
-## Adding variables for the error-bars
+### Step 3: adding variables for the error-bars
 We are almost done preparing our data for the `ggplot()` we are designing. Our last task is to add to our data frame of summary statistics (mean and std. deviation).  Recall that `mutate(new_var = values)` is our method for creating new variables.  Specifically, we want to add
 
 * `low`: a value for the lower end of our error-bar, created by taking `average_pH - 2*std.dev_pH`; and
 * `high`: a value for the lower end of our error-bar, created by taking `average_pH + 2*std.dev_pH`
 
-### Exercise: adding `low` and `high` variables to our summary table.
+#### Exercise: adding `low` and `high` variables to our summary table.
 Fill in the `mutate()` code below, which we added to our work from the previous two sections.
 ```{r mutate, exercise = TRUE, exercise.lines=9}
 experiment %>% 
@@ -234,7 +235,10 @@ The data frame we created over the three sections contains all the information w
 
 Onward!
 
-## Incrementally building our plot
+
+
+
+## Incrementally building our plot {data-progressive=TRUE}
 Before continuing, it helps to save the summary data frame we created for plotting purposes.  The code below accomplishes this by adding a `-> plot_df` to the last line of the code. This essentially saves our work under the name `plot_df`, so that we can reference it later.
 ```
 experiment %>% 
@@ -259,7 +263,7 @@ where
 
 #### Exercise: setting up axes.
 Complete the code below to link our plot to `plot_df`, and set the `x` and `y` aesthetics.  Remember we want the treatment group on the $x$-axis and the average pH on the $y$-axis.
-```{r axes-setup, inclue = FALSE}
+```{r axes-setup, include = FALSE}
 experiment %>% 
     filter(Time=="72hr") %>%
     group_by(Treatment) %>%
@@ -291,24 +295,116 @@ ggplot(data = plot_df,
 ```
 
 ### Exercise: adding the first geometry
+Now that the axes are set up, we can add our first geometry.  Remember that the bars in our sketch reflected the average pH of each Treatment group. Our $x$ and $y$ aesthetics are already set up, so we simply need to add the geometry.
+
+In this case, we will use `geom_col()` as our geometry.^[The `geom_bar()` geometry also creates a bar plot, but it is designed specifically to work with categorical data and do aggregation automatically so that you do not need to summarize before sending the data to the ggplot commands.] Add the code below!
+
+```{r geom-bar, exercise = TRUE, exercise.lines=5, exercise.setup="axes-setup"}
+# add the geometry to the code below
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) 
+```
+```{r geom-bar-hint-1}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_...
+```
+```{r geom-bar-solution}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col()
+```
+
+### Adding error-bars
+To show the variation within each treatment group, let's add the error-bars as prescribed by our `low` and `high` variables in `plot_df`. (Remember these represent (mean $\pm$ 2*std.dev) for the measurements within each group.)
+
+The `geom_errorbar()` geometry requires some new aesthetics to work.  Since we have already set `x` when we created our axes, we need only specify two additional aesthetics to control where the error bars start and stop.  
+
+* `ymin`: determines the bottom of the error bar (we will use `low` from `plot_df`)
+* `ymax`: determines the top of the error bar (we will use `high` from `plot_df`)
+
+We will also adjust the *width* of the error bars, because the default width is not good.  We do this by adding `width = ...` outside of the aesthetics, but still inside the error-bar geometry.
+
+#### Exercise. 
+Add `geom_errobar(aes(...), width = ...)` to the plot below, and 
+* assign the `ymin` and `ymax` aesthetics,
+* provide a value of 0.1 for the width.
+
+This should add nice-looking error bars to our plot.
+
+```{r error-bars, exercise = TRUE, exercise.lines=6, exercise.setup="axes-setup"}
+# add the errobar geometry and the aesthetics
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col()
+```
+```{r error-bars-hint-1}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col()+
+    geom_errorbar(aes(ymin=..., ymax =...), width = ...)
+```
+```{r error-bars-hint-2}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = ...)
+```
+```{r error-bars-solution}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
+```
+
+
+### Adding a fill color by Treatment
+Suppose we want some color in the plot; specifically, we would like each treatment group to be a different color.
+
+Since the `fill` color will depend on the `Treatment` variable, this is a new aesthetic! As such, it must appear inside `aes()`. While there are many places we can put this aesthetic,^[We could place `fill=Treatment` in with the `x` and `y` aesthetics in the `ggplot(...)` part of this plot] we will put it inside the `geom_col()` part of the plot.
+
+```{r geom-color-bar, exercise = TRUE, exercise.lines=6, exercise.setup="axes-setup"}
+# add the fill aesthetic to the code below
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( ... ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
+```
+```{r geom-color-bar-hint-1}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill= ... ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
+```
+```{r geom-color-bar-solution}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill=Treatment))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
+```
 
 
 
-## Adding error-bars, finishing touches
-* add error-bars, 
+## Finalizing the plot {data-progressive=TRUE}
+
+### `scale_*` your `aes()`thetics 
 * start y-axis at zero (`scale_y_continuous(limits=c(0,6.5))`)
 
-#### `scale_*` your `aes()`thetics 
+### Some other adjustments
 
-## Finalizing the plot
+### Add a title and axis labels with `labs()`
 
-#### Some other adjustments
-
-#### Add a title and axis labels with `labs()`
-
-#### Optional: overlay the data!
-
-## Review Exercises
+## Optional: overlay the data!
 
 ## Optional: Modified versions of this plot
 Show a few variations, highlighting changes made in the code to create the modifications:
