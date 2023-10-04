@@ -9,6 +9,7 @@ runtime: shiny_prerendered
 library(learnr)
 library(dplyr)
 library(ggplot2)
+library(patchwork)
 knitr::opts_chunk$set(echo = FALSE)
 experiment <- read.csv('data/experiment_data.csv', header = T)
 ```
@@ -250,7 +251,7 @@ experiment %>%
            high = average_pH + 2*std.dev_pH) -> plot_df
 ```
 
-### Start the `ggplot()` with `data =` and `aes()`thetics
+### Start the plot.
 Equipped with `plot_df`, we are ready to start creating out plot.  As a brief reminder, remember our general syntax is 
 ```
 ggplot(data = df_name, 
@@ -259,7 +260,7 @@ ggplot(data = df_name,
 where 
 
 * `df_name` is the data frame from which we pull our information
-* `aes()` sets our global aesthetics, like `x` for our $x$-axis and `y` for our $y$-axis, and potentially more.
+* `aes()` sets our global aesthetics^[By "global aesthetics," we mean aesthetics that will apply to all the geometries we use.], like `x` for our $x$-axis and `y` for our $y$-axis, and potentially more.
 
 #### Exercise: setting up axes.
 Complete the code below to link our plot to `plot_df`, and set the `x` and `y` aesthetics.  Remember we want the treatment group on the $x$-axis and the average pH on the $y$-axis.
@@ -330,7 +331,8 @@ We will also adjust the *width* of the error bars, because the default width is 
 
 #### Exercise. 
 Add `geom_errobar(aes(...), width = ...)` to the plot below, and 
-* assign the `ymin` and `ymax` aesthetics,
+
+* assign the `ymin` and `ymax` aesthetics to the variables `low` and `high`, respectively; and
 * provide a value of 0.1 for the width.
 
 This should add nice-looking error bars to our plot.
@@ -365,7 +367,7 @@ ggplot(data = plot_df,
 ```
 
 
-### Adding a fill color by Treatment
+### Adding a *fill*-color by Treatment
 Suppose we want some color in the plot; specifically, we would like each treatment group to be a different color.
 
 Since the `fill` color will depend on the `Treatment` variable, this is a new aesthetic! As such, it must appear inside `aes()`. While there are many places we can put this aesthetic,^[We could place `fill=Treatment` in with the `x` and `y` aesthetics in the `ggplot(...)` part of this plot] we will put it inside the `geom_col()` part of the plot.
@@ -393,19 +395,247 @@ ggplot(data = plot_df,
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
 
+#### Great work!
+We have an excellent working plot right now, and it looks even better than your co-author's drawing (no offense). There are a few tweaks, however, that might make it better.  In the last section, we demonstrate some finishing touches!
+
+Ready to wrap it up?
 
 
 ## Finalizing the plot {data-progressive=TRUE}
+Here is our plot so far
+```{r fig.align='center',fig.width=5,fig.height=2.5}
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+    mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH) -> plot_df
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill=Treatment))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
+```
 
-### `scale_*` your `aes()`thetics 
-* start y-axis at zero (`scale_y_continuous(limits=c(0,6.5))`)
+We want to make two modifications:
 
-### Some other adjustments
+1. We want better axis labels and a title; specifically, we want the $y$-axis to be "Average pH" and a title of "Leaf pH at 72 hours by Treatment."
+2. We want the $y$-axis to have markings for every unit of pH (i.e., it should be labeled 0, 1, 2, ...7).
 
-### Add a title and axis labels with `labs()`
+The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involes *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
 
-## Optional: overlay the data!
+### Adding axis labels and a title
+Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
+```{r labels, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
+# add the fill aesthetic to the code below
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="new y axis", title = "this is on top")
+```
+```{r labels-hint-1}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "...")
+```
+```{r labels-solution}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")
+```
 
-## Optional: Modified versions of this plot
-Show a few variations, highlighting changes made in the code to create the modifications:
+### Scaling the $y$-axis
+When scaling a continuous aesthetic, like `y` which records pH, we use the following
+```
+scale_y_continuous(breaks = vector_of_labels)
+```
+The `breaks` argument allows us to choose which labels we want to appear on the axis. However, we do need to provide these as a vector of numbers.  To accomplish this, I recommend using the `seq()` function.  Run the code below to get a sense of how it works.
+```{r sequence, exercise=TRUE, exercise.lines=2}
+seq(0, 7, by = 0.5)
+```
+*What code would give us a vector containing 0, 1, 2, ..., 7?* Use the code-chunk above to figure this out, because you will need it in the next exercise!
+
+#### Exercise: adding $y$-axis labels.
+For our last exercise, add the `scale_y_continuous(breaks=...)` code to the plot. Fill in the `...` with the appropriate code to generate a our labels from 0 to 7.
+```{r scale-y, exercise = TRUE, exercise.lines=9, exercise.setup="axes-setup"}
+# add the fill aesthetic to the code below
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")
+```
+```{r scale-y-hint-1}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill= fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = ...)
+```
+```{r scale-y-hint-2}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill= fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = seq(...))
+```
+```{r scale-y-solution}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill=Treatment))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+```
+
+***
+***
+
+***Excellent work!***
+
+You have created a publication worthy plot of the experiment data.  The next section is a conclusion where we wrap up some of our ideas and present all the code we generated for this plot. 
+
+Continue on to review!
+
+
+## Conclusions
+Notes, comments, summaries.
+
+#### Steps for making plot
+
+1. prepare the data frame
+2. set up axes and link plotting data
+3. add geometries and potentially new aesthetics
+4. scale aesthetics
+5. add labels
+
+#### More options for this data!
+There is always more than one way to visualize data. Here are a few other options that might be decent choices for this experiment and its results.  Code for these plots can be found here (INSERT LINK HERE !!!)
+```{r}
+# preparing the plot data frame
+experiment %>% 
+    filter(Time=="72hr")->exp2
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+     mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH) -> plot_df
+           
+# Creating our plot
+g1<-ggplot(data = plot_df,     
+       aes(x = Treatment, y = average_pH))+
+    geom_col(aes(fill = Treatment))+
+    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+g2<-ggplot(data = plot_df,     
+       aes(x = Treatment, y = average_pH))+
+    geom_col(aes(fill = Treatment),alpha = .6)+
+    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+
+p1<-g1 + scale_fill_brewer(palette="Accent")+theme_bw()+labs(title="Adjust color schemes with `brewer`")
+p2<-g2 + geom_point(data = exp2,
+                    aes(x=Treatment,y=pH,fill=Treatment),
+                    position=position_jitter(width=.2),
+                    pch = 21)+labs(y="pH",title="Overlay data to visualize individual values in each group",subtitle = "(Columns indicate the mean pH for each group.)")
+p3<-ggplot(data = exp2,     
+       aes(x = Treatment, y = pH))+
+    geom_boxplot()+
+    geom_violin(aes(fill = Treatment),alpha = .3,color=NA)+
+    labs(y="pH", title = "Mix boxplots and violin plots to see the\ndistributions by treatment group")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))+theme_bw()
+
+p4<-ggplot(data = plot_df,     
+       aes(x = Treatment, y = average_pH))+
+    geom_errorbar(aes(ymin = low, ymax = high,color=Treatment), width = 0.5,linewidth=.7)+
+    geom_point(aes(fill = Treatment),pch = 21,size=3)+
+    labs(y="Average pH", title = "Confidence intervals only")+
+    scale_y_continuous(limits=c(3,7),breaks = seq(3,7,by = 1))+theme_bw()
+```
+```{r fig.align='center',fig.width=5}
+p1
+```
+```{r fig.align='center',fig.width=5}
+p4
+```
+```{r fig.align='center',fig.width=5}
+p2
+```
+```{r fig.align='center',fig.width=5}
+p3
+```
+
+(PROVIDE GITHUB LINKS TO CODE FOR EACH PLOT)
+
+Links to related exercises and resources.
+
+### All the code together
+```
+# preparing the plot data frame
+experiment %>% 
+    # keep only rows at the final time point (i.e., the end)
+    filter(Time=="72hr") %>%
+    
+    # We want summaries for each treatment group, so we
+    # group by Treatment
+    group_by(Treatment) %>%
+    
+    # Now we make our summaries, mean and std. deviation
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+            
+    # We need to add two new variables to control the 
+    # start and stop heights of our error-bars.
+    mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH) -> plot_df
+           
+    # The ->plot_df saves our work under the name plot_df
+    
+# Creating our plot
+ggplot(data = plot_df,      # link to our plotting data
+       # set our axis aesthetics
+       aes(x = Treatment, y = average_pH))+
+       
+    # add the column geometry for the bars, 
+    # the fill aesthetic chooses a new color for each 
+    # treatment group.
+    
+    geom_col(aes(fill = Treatment))+
+    
+    # add the errorbars, using the ymin and ymax aesthetics
+    # we use width = 0.1 to adjust the width of the error-bars
+    
+    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
+    
+    # add y-axis label and title
+    
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    
+    # use breaks to define how we want to label the markings
+    # on the y-axis
+    
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+    
+# All set!
+```
+
 

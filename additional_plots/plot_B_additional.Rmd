@@ -1,0 +1,14 @@
+---
+title: "Additional Visualizations, Time-series Lesion Size Experiment"
+author: "P. Lombardo & J. Kaufman"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+---
+
+## Loading packages and data
+```{r}
+# place
+```
+
