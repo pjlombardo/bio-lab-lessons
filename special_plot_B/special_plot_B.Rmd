@@ -1,7 +1,9 @@
 ---
 title: "Visualizing Metrics as Time Series, Showing Variation"
 author: P. Lombardo and G. Kwan
-output: learnr::tutorial
+output: 
+    learnr::tutorial:
+        theme: "cerulean"
 runtime: shiny_prerendered
 ---
 
@@ -14,127 +16,653 @@ experiment <- read.csv('data/experiment_data.csv', header = T)
 ```
 
 
-## Experimental Set Up
-Review experiment and data
+## Understanding the experiment
+In this lesson, we will learn how to create an important plot for visualizing the progression in a mean measurement across time for several groups.  To best understand the visual, we should understand the underlying experiment.  The data, and the description below, were generously provided by Dr. Grace Kwan.
 
-### Exploring data set
-have them explore with `head(experiment)`
+#### Abstract
 
-Overview the goals of the lesson, then
+*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. You have probably seen P. carotovorum in action if you have ever left some fresh produce in the refrigerator too long and came back to a slimy, watery mess. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients -- nutrients that support the continued growth of the bacterial pathogen.*
 
-* link to tidy-ing videos and lessons, and 
-* ggplot basics for incremental building of plots.
+*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme's activity diminishes. Pathogens may need to regulate the pH of their environment in order to ensure that their enzymes function optimally. *
 
-###  Summarizing time-series data, saving as `df`
-testing stuff
+*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to break down plant tissues (i.e., rot them). P. carotovorum uses the BudB protein to limit acid production by providing an alternate fermentation pathway that results in a product of neutral pH.*
 
-`forcats` to potentially re-level the data so our categories appear in the correct order.
+### Experiment details
+The experiment monitored several lettuce leaves within each treatment class:
 
-## Planning our plot
-An example picture, but "hand-drawn"
+* Three control leaves without bacteria (`Control`)
+* Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
+* Nine leaves inoculated with $\Delta$budB mutant (`budB`).
 
-Which data?
-What are the axes?
-What "geometries" appear?
+At 24, 48, and 72 hours, disease progression was monitored as the length of the soft rot area in millimeters (`Lesion.mm`).
 
-## Incrementally building our plot
+### Exploring the data
+Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower left to see more rows of the data.
+```{r explore-p1, exercise = TRUE, exercise.lines=3}
+experiment
+```
 
-#### Start the `ggplot()` with `data =` and `aes()`thetics
+```{r var-questions}
+question("We are primarily interested in how the length of the soft rot area changes over time, and whether these time-progressions are different for each treatment group.<br> With that in mind, which variables from our data frame will be necessary for our plot? *Select all that apply.*",
+    answer("Leaf_ID"),
+    answer("pH"),
+    answer("Treatment", correct = TRUE),
+    answer("Time", correct = TRUE),
+    answer("Lesion.mm",correct = TRUE),
+    answer("Sample"),
+    allow_retry = T,
+    random_answer_order = T,
+    incorrect = paste(random_encouragement(),"Look at the column headings of the data frame after running the code above this question."),
+    post_message = random_praise()
+  )
+```
 
-#### Add `geom_*`-etries to visualize the data
+### Great work so far!
+Now that we are acquainted (or re-acquainted) with the data, we can turn to the task at hand.  We want to visualize how the average lesion length for each treatment group changes over time.  In addition, we wish to have our visual convey a sense the variation we saw *within* the groups at different times. 
 
-#### `scale_*` your `aes()`thetics 
+In the next section, we will present a common plot for accomplishing the goals above, and then spend the rest of the lesson learning how to make this plot using `dplyr` and `ggplot2` in R!
 
-## Finalizing the plot
-
-#### Some other adjustments
-
-#### Add a title and axis labels with `labs()`
-
-#### Optional: overlay the data!
-
-## Review Exercises
-
-
-## Optional: Modified versions of this plot
-Show a few variations, highlighting changes made in the code to creat the modifications:
+Shall we get started?
 
 ***
-## Example exercises
 
-### Exercise 
+*Quick Remarks:* For those new to `ggplot2`, we recommend this brief lesson (LINK HERE!!!!).  There is also a nice lesson on summary tables using `dplyr` here (LINK HERE !!!!).
 
-*Here's a simple exercise with an empty code chunk provided for entering the answer.*
 
-Write the R code required to add two plus two:
 
-```{r two-plus-two, exercise=TRUE}
+## Planning our plot
+Your co-author asks whether you can build the following plot in `ggplot2`; she provides a quick, hand-drawn sketch:
 
+<center><img src="images/plot1draw.jpg" alt="Co-author Plot Sketch" width="70%"></center>
+
+To translate a plot into `ggplot()` code, we start by considering two questions:
+
+1. What aesthetics, `aes()`, will we need? 
+2. What geometries, `geom_*()`, appear?
+
+### Aesthetics
+Getting started with the aesthetics is easiest because our axes will always be part of the aesthetics. Looking at how the axes are labeled, we can surmise:
+
+* `x`: The $x$-axis aesthetic will be our `Treatment` variable, because our group classifications appear as the labels along the axis.
+* `y`: The $y$-axis aesthetic is trickier.  Notice it is labeled with ***average*** Lesion Length.  Average lesion length is related to, *but not the same as* the `Lesion.mm` measurement. 
+
+> **Important Idea:** Because the `y` aesthetic reports the average (or mean) of `Lesion.mm`, we will need to use a data frame that has contains this average as a variable for each group *and at each time point*.
+
+* `color`: The point-line elements in the plot are organized by color, which depends on `Treatment`.  This will also need to be an aesthetic because it depends on data.
+
+We can do this by grouping and summarizing our `experiment` data frame, but before we jump to this let's continue planning our plot.
+
+### Geometries
+Notice that the "content" (loosely speaking, the drawing in the middle of the plot) consists of
+
+* **points**, which represent the average lesion length. (`geom_point()`)
+* **lines**, which connect the average lesion lengths. (`geom_line()`)
+* **error-bars**, which give us a sense of the variation *within* the `Treatment` groups at each time point. (`geom_errorbar()`)
+
+To correctly plot the `geom_errorbar()`, our data frame needs to include have to include the following for each group *and each time point*:
+
+* `ymin`: the value for the lowest part of the error bar,
+* `ymax`: the value for the upper part where the error bar stops.
+
+To determine the start and stop values of the error-bars, we will use a (mean $\pm$ 2*std.dev) approach to determine these values.^[This is inspired by confidence intervals for the population mean based on a sample mean, but the results are unofficial.]
+
+### Keep on going!
+Hopefully, the recipe for constructing this plot is starting to take form.  In the remaining sections, we will
+
+1. Prepare a data frame from `experiment` that has the information we need to create the plot; we'll call it `plot_df`.
+2. Use `plot_df` to set up the axes, and then plot the lines and points.
+3. Finish with the error-bars and add some final touches (like labels and titles). 
+
+Let's go!
+
+
+
+
+## Preparing a plotting data frame {data-progressive=TRUE}
+Having understood and processed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
+
+1. Because of our $y$-axis aesthetic, which is an average, we will need to `group_by()` the `Treatment` variable, and `summarize()` to get the mean `Lesion.mm` for each group.
+2. Because our $x$-axis aesthetic involves multiple time points, we will actually need the summaries described in (1) above *for each time point*: 24, 48, and 72 hours.  We can accomplish this by adding `Time` to the `group_by()` function.
+3. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev. These variables will need to have this information for each group at each time point.
+
+With this in mind, our plotting data frame should have four variables:
+
+* `Treatment`: indicating the treatment group for that row
+* `Time`: indicating the time point for that row
+
+(*Note:* there will be enough rows to cover each treatment group at each of the time points)
+
+* `average.Lesion.mm`: measuring the average lesion length at that time point for the given treatment group.
+* `stddev.Lesion.mm`: measuring the standard deviation of the lesion lengths at that time point for the given treatment group.
+* `low`: the lower limit of a confidence interval (`mean - 2*std.dev`), which we will use for the start of our error bars; again, this is associated to a specific group at a specific time.
+* `high`: the upper limit of a confidence interval (`mean + 2*std.dev`), which we will use for the end of our error bars; again, this is associated to a specific group at a specific time.
+
+### Step 1: grouping and summarizing
+We can begin creating the summary data we need to for our plot.  Since we want to compute summaries for each `Treatment` group at each `Time`, we need to
+
+1. Take our data frame and `group_by()` the `Treatment` and `Time` variables, then
+2. `summarize()` the appropriate variable (`Lesion.mm`) using `R` functions.
+
+In particular, we will need the `mean()` function and the `sd()` function to compute the mean and standard deviation of the `Lesion.mm` variable.
+
+#### Exercise: summary statistics for lesion length
+Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.  Use the following names for these variables: `average.Lesion.mm` and `stddev.Lesion.mm`.
+
+```{r group-by, exercise = TRUE, exercise.lines=6,message=FALSE}
+experiment %>% 
+    group_by(...) %>%
+    summarize(...)
+```
+```{r group-by-hint-1}
+experiment %>% 
+    group_by(Treatment, ...) %>%
+    summarize(...)
+```
+```{r group-by-hint-2}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = ..., # write your computation
+            stddev.Lesion.mm = ...   # write your computation
+             )
+```
+```{r group-by-solution}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)
+             )
 ```
 
-### Exercise with Code
+*Data Check:* Look at the data frame.  Does it have one row for each treatment group at each time point? (This is 9 rows in total, since we have 3 groups at 3 time points.) 
 
-*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
+### Step 2: adding variables for the error-bars
+We are almost done preparing our data for the `ggplot()` we are designing. Our last task is to add to our data frame of summary statistics (mean and std. deviation).  Recall that `mutate(new_var = values)` is our method for creating new variables.  Specifically, we want to add
 
-Now write a function that adds any two numbers and then call it:
+* `low`: a value for the lower end of our error-bar, created by taking `average.Lesion.mm - 2*stddev.Lesion.mm`; and
+* `high`: a value for the lower end of our error-bar, created by taking `average.Lesion.mm - 2*stddev.Lesion.mm`
 
-```{r add-function, exercise=TRUE, exercise.lines = 5}
-add <- function() {
-  
-}
+#### Exercise: adding `low` and `high` variables to our summary table.
+Fill in the `mutate()` code below, which we added to our work from the previous two sections.
+```{r mutate, exercise = TRUE, exercise.lines=7, message=FALSE}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(...)
+```
+```{r mutate-hint-1}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = ...,
+           high = ...)
+```
+```{r mutate-hint-2}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = ...)
+```
+```{r mutate-solution}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = average.Lesion.mm + 2*stddev.Lesion.mm)
 ```
 
-## Topic 2
+### Amazing!
+The data frame we just created contains all the information we need to pass to `ggplot()` in order to create our visual.  In the next two sections, we will build our plot in stages.
 
-### Exercise with Hint
+Onward!
 
-*Here's an exercise where the chunk is pre-evaluated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
-
-Modify the following code to limit the number of rows printed to 5:
-
-```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
-mtcars
+## Incrementally building our plot {data-progressive=TRUE}
+Before continuing, it helps to save the summary data frame we created for plotting purposes.  The code below accomplishes this by adding a `-> plot_df` to the last line of the code. This essentially saves our work under the name `plot_df`, so that we can reference it later.
+```
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
 ```
 
-```{r print-limit-hint}
-head(mtcars)
+### Start the plot.
+Equipped with `plot_df`, we are ready to start creating out plot.  As a brief reminder, remember our general syntax is 
+```
+ggplot(data = df_name, 
+       aes(x = ..., y = ..., ...))
+```
+where 
+
+* `df_name` is the data frame from which we pull our information
+* `aes()` sets our global aesthetics^[By "global aesthetics," we mean aesthetics that will apply to all the geometries we use.], like `x` for our $x$-axis and `y` for our $y$-axis, and potentially more.
+
+#### Exercise: setting up axes.
+Complete the code below to link our plot to `plot_df`, and set the `x`, `y`, and `color` aesthetics.  Remember we want the times on the $x$-axis, and the *average* lesion length on the $y$-axis, and the color should depend on the treatment group.
+```{r axes-setup, include = FALSE}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
+```
+
+```{r axes, exercise = TRUE, exercise.lines=5}
+ggplot(data = ...,
+       aes(x = ...,
+           y = ...,
+           color = ...))
+```
+```{r axes-hint-1}
+ggplot(data = plot_df,
+       aes(x = ...,
+           y = ...,
+           color = ...))
+```
+```{r axes-hint-2}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = ...))
+```
+```{r axes-solution}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment))
+```
+
+### Exercise: adding the point and line geometries
+Now that the axes are set up, we can add our first geometries.  Remember that the points in our sketch reflected the average lesion length of each Treatment group, and the lines connected them at different time points. We have taken our best guess at the aesthetics, so let's try adding the geometries.
+
+In this case, we will use `geom_point()` and `geom_line()` as our geometries. Add both of them to the code below!
+
+(*Note*: you will get a plot, but not the one that you want! Don't panic :))
+
+```{r geoms, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
+# add the geometry to the code below
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment))
+```
+```{r geoms-hint-1}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment)) +
+    geom_... +
+    geom_...
+```
+```{r geoms-hint-2}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment)) +
+    geom_point() +
+    geom_...
+```
+```{r geoms-solution}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment)) +
+    geom_point()+
+    geom_line()
+    
+```
+
+### One more aesthetic to fix the problem
+The previous plot ***was wrong!*** (Gasp!).
+
+Yes. This happens ***all the time*** when you are coding. That's why we build things incrementally; so we can error check and correct as we go.
+
+Even though we added `geom_line()`, the plot did not contain any lines.  However, notice that we got an error message in return:
+
+>**Error message:** `geom_line()`: Each group consists of only one observation. Do you need to adjust the group aesthetic?
+
+What's the group aesthetic? Well, those that would like to read the [documentation for geom_line()](https://ggplot2.tidyverse.org/reference/geom_path.html) are welcome, but we will give you the quick answer. 
+
+To get `geom_line()` to connect dots in the same **group**, we need to add `group = ...` as an aesthetic to our plot.
+
+#### Exercise: connecting the dots
+Add the group aesthetic to the code below, and see how it fixes our plot! Remember, we want to plot the lines based on the `Treatment` group.
+```{r geoms-fixed, exercise = TRUE, exercise.lines=9, exercise.setup="axes-setup"}
+# add the group aesthetic to the code below
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = ...))+
+    geom_point() + 
+    geom_line()
+```
+```{r geoms-fixed-solution}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + 
+    geom_line()
 ```
 
 
-### Shiny Example
-```{r, echo=FALSE}
-sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30)
-plotOutput("distPlot")
+### Adding error-bars
+To show the variation within each treatment group at each time point, let's add the error-bars as prescribed by our `low` and `high` variables in `plot_df`. (Remember these represent (mean $\pm$ 2*std.dev) for the measurements within each group at each time.)
+
+The `geom_errorbar()` geometry requires some new aesthetics to work.  Since we have already set `x` when we created our axes, we need only specify two additional aesthetics to control where the error bars start and stop.  
+
+* `ymin`: determines the bottom of the error bar (we will use `low` from `plot_df`)
+* `ymax`: determines the top of the error bar (we will use `high` from `plot_df`)
+
+We will also adjust the *width* of the error bars, because the default width is not good.  We do this by adding `width = ...` outside of the aesthetics, but still inside the error-bar geometry.
+
+#### Exercise. 
+Add `geom_errobar(aes(...), width = ...)` to the plot below, and 
+
+* assign the `ymin` and `ymax` aesthetics to the variables `low` and `high`, respectively; and
+* provide a value of 0.1 for the width.
+
+This should add nice-looking error bars to our plot.
+
+```{r error-bars, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
+# add the errobar geometry and the aesthetics
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()
+```
+```{r error-bars-hint-1}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=..., ymax =...), width = ...)
+```
+```{r error-bars-hint-2}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = ...)
+```
+```{r error-bars-solution}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
 
-```{r, context="server"}
-output$distPlot <- renderPlot({
-  x <- faithful[, 2]  # Old Faithful Geyser data
-  bins <- seq(min(x), max(x), length.out = input$bins + 1)
-  hist(x, breaks = bins, col = 'darkgray', border = 'white')
-})
+
+
+#### Great work!
+We have an excellent working plot right now, and it looks even better than your co-author's drawing (no offense). There are a few tweaks, however, that might make it better.  In the last section, we demonstrate some finishing touches!
+
+Ready to wrap it up?
+
+
+
+
+
+
+## Finalizing the plot {data-progressive=TRUE}
+Here is our plot so far
+```{r fig.align='center',fig.width=5,fig.height=3.5, message = FALSE}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
+
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
 
-### Quiz
+***CORRECT FROM HERE!!!***
+We want to make two modifications:
 
-*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
+1. We want better axis labels and a title; specifically, we want the $y$-axis to be "Average pH" and a title of "Leaf pH at 72 hours by Treatment."
+2. We want the $y$-axis to have markings for every unit of pH (i.e., it should be labeled 0, 1, 2, ...7).
 
-Some questions to verify that you understand the purposes of various base and recommended R packages:
+The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involes *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
 
-```{r quiz}
-quiz(
-  question("Which package contains functions for installing other R packages?",
-    answer("base"),
-    answer("tools"),
-    answer("utils", correct = TRUE),
-    answer("codetools")
-  ),
-  question("Which of the R packages listed below are used to create plots?",
-    answer("lattice", correct = TRUE),
-    answer("tools"),
-    answer("stats"),
-    answer("grid", correct = TRUE)
-  )
-)
+### Adding axis labels and a title
+Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
+```{r labels, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
+# add the fill aesthetic to the code below
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="new y axis", title = "this is on top")
 ```
+```{r labels-hint-1}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "...")
+```
+```{r labels-solution}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")
+```
+
+### Scaling the $y$-axis
+When scaling a continuous aesthetic, like `y` which records pH, we use the following
+```
+scale_y_continuous(breaks = vector_of_labels)
+```
+The `breaks` argument allows us to choose which labels we want to appear on the axis. However, we do need to provide these as a vector of numbers.  To accomplish this, I recommend using the `seq()` function.  Run the code below to get a sense of how it works.
+```{r sequence, exercise=TRUE, exercise.lines=2}
+seq(0, 7, by = 0.5)
+```
+*What code would give us a vector containing 0, 1, 2, ..., 7?* Use the code-chunk above to figure this out, because you will need it in the next exercise!
+
+#### Exercise: adding $y$-axis labels.
+For our last exercise, add the `scale_y_continuous(breaks=...)` code to the plot. Fill in the `...` with the appropriate code to generate a our labels from 0 to 7.
+```{r scale-y, exercise = TRUE, exercise.lines=9, exercise.setup="axes-setup"}
+# add the fill aesthetic to the code below
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes( fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")
+```
+```{r scale-y-hint-1}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill= fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = ...)
+```
+```{r scale-y-hint-2}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill= fill=Treatment ))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = seq(...))
+```
+```{r scale-y-solution}
+ggplot(data = plot_df,
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill=Treatment))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+```
+
+***
+***
+
+***Excellent work!***
+
+You have created a publication worthy plot of the experiment data.  The next section is a conclusion where we wrap up some of our ideas and present all the code we generated for this plot. 
+
+Continue on to review!
+
+
+
+
+
+
+## Conclusions
+Notes, comments, summaries.
+
+#### Steps for making plot
+
+1. prepare the data frame
+2. set up axes and link plotting data
+3. add geometries and potentially new aesthetics
+4. scale aesthetics
+5. add labels
+
+#### More options for this data!
+There is always more than one way to visualize data. Here are a few other options that might be decent choices for this experiment and its results.  Code for these plots can be found here (INSERT LINK HERE !!!)
+```{r}
+# preparing the plot data frame
+experiment %>% 
+    filter(Time=="72hr")->exp2
+experiment %>% 
+    filter(Time=="72hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+     mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH) -> plot_df
+           
+# Creating our plot
+g1<-ggplot(data = plot_df,     
+       aes(x = Treatment, y = average_pH))+
+    geom_col(aes(fill = Treatment))+
+    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+g2<-ggplot(data = plot_df,     
+       aes(x = Treatment, y = average_pH))+
+    geom_col(aes(fill = Treatment),alpha = .6)+
+    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+
+p1<-g1 + scale_fill_brewer(palette="Accent")+theme_bw()+labs(title="Adjust color schemes with `brewer`")
+p2<-g2 + geom_point(data = exp2,
+                    aes(x=Treatment,y=pH,fill=Treatment),
+                    position=position_jitter(width=.2),
+                    pch = 21)+labs(y="pH",title="Overlay data to visualize individual values in each group",subtitle = "(Columns indicate the mean pH for each group.)")
+p3<-ggplot(data = exp2,     
+       aes(x = Treatment, y = pH))+
+    geom_boxplot()+
+    geom_violin(aes(fill = Treatment),alpha = .3,color=NA)+
+    labs(y="pH", title = "Mix boxplots and violin plots to see the\ndistributions by treatment group")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))+theme_bw()
+
+p4<-ggplot(data = plot_df,     
+       aes(x = Treatment, y = average_pH))+
+    geom_errorbar(aes(ymin = low, ymax = high,color=Treatment), width = 0.5,linewidth=.7)+
+    geom_point(aes(fill = Treatment),pch = 21,size=3)+
+    labs(y="Average pH", title = "Confidence intervals only")+
+    scale_y_continuous(limits=c(3,7),breaks = seq(3,7,by = 1))+theme_bw()
+```
+```{r fig.align='center',fig.width=5}
+p1
+```
+```{r fig.align='center',fig.width=5}
+p4
+```
+```{r fig.align='center',fig.width=5}
+p2
+```
+```{r fig.align='center',fig.width=5}
+p3
+```
+
+(PROVIDE GITHUB LINKS TO CODE FOR EACH PLOT)
+
+Links to related exercises and resources.
+
+### All the code together
+```
+# preparing the plot data frame
+experiment %>% 
+    # keep only rows at the final time point (i.e., the end)
+    filter(Time=="72hr") %>%
+    
+    # We want summaries for each treatment group, so we
+    # group by Treatment
+    group_by(Treatment) %>%
+    
+    # Now we make our summaries, mean and std. deviation
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+            
+    # We need to add two new variables to control the 
+    # start and stop heights of our error-bars.
+    mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH) -> plot_df
+           
+    # The ->plot_df saves our work under the name plot_df
+    
+# Creating our plot
+ggplot(data = plot_df,      # link to our plotting data
+       # set our axis aesthetics
+       aes(x = Treatment, y = average_pH))+
+       
+    # add the column geometry for the bars, 
+    # the fill aesthetic chooses a new color for each 
+    # treatment group.
+    
+    geom_col(aes(fill = Treatment))+
+    
+    # add the errorbars, using the ymin and ymax aesthetics
+    # we use width = 0.1 to adjust the width of the error-bars
+    
+    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
+    
+    # add y-axis label and title
+    
+    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    
+    # use breaks to define how we want to label the markings
+    # on the y-axis
+    
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+    
+# All set!
+```
+
 

@@ -120,6 +120,9 @@ Hopefully, the recipe for constructing this plot is starting to take form.  In t
 
 Ready to get plotting?
 
+
+
+
 ## Preparing a plotting data frame {data-progressive=TRUE}
 Having surveyed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
 
@@ -235,6 +238,8 @@ experiment %>%
 The data frame we created over the three sections contains all the information we need to pass to `ggplot()` in order to create our visual.  In the next two sections, we will build our plot in stages.
 
 Onward!
+
+
 
 
 
