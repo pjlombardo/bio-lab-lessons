@@ -1,14 +1,147 @@
 ---
 title: "Additional Visualizations, Time-series Lesion Size Experiment"
-author: "P. Lombardo & J. Kaufman"
+author: "P. Lombardo"
 output:
   html_document:
     df_print: paged
   html_notebook: default
 ---
 
-## Loading packages and data
+```{r, echo = FALSE, include =FALSE}
+library(dplyr)
+library(ggplot2)
+# For re-leveling the Treatment factor below
+library(forcats)
+experiment <- read.csv('data/experiment_data.csv', header = T)
+```
+
+## Understanding the experimental data
+The data, and the description below, were generously provided by Dr. Grace Kwan.
+
+#### Abstract
+
+*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. You have probably seen P. carotovorum in action if you have ever left some fresh produce in the refrigerator too long and came back to a slimy, watery mess. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients -- nutrients that support the continued growth of the bacterial pathogen.*
+
+*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme's activity diminishes. Pathogens may need to regulate the pH of their environment in order to ensure that their enzymes function optimally. *
+
+*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to break down plant tissues (i.e., rot them). P. carotovorum uses the BudB protein to limit acid production by providing an alternate fermentation pathway that results in a product of neutral pH.*
+
+### Experiment details
+The experiment monitored several lettuce leaves within each treatment class:
+
+* Three control leaves without bacteria (`Control`)
+* Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
+* Nine leaves inoculated with $\Delta$budB mutant (`budB`).
+
+At 24, 48, and 72 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 72 hrs, the soft rotted tissue was mashed up to evaluate the pH.
+
+## Preparing the data frame
+
+```{r message = FALSE}
+experiment %>% 
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
+```
+
+## Original plot
+
+```{r message = FALSE}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  alpha = .5)+
+    theme_bw()+
+    labs(y="Average Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
+```
+
+## Point, line, and error-bars "dodged" to avoid overlap
 ```{r}
-# place
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point(position=position_dodge(width=.095)) +
+    geom_line(position=position_dodge(width=.095))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  alpha = .6, position=position_dodge())+
+    theme_classic()+
+    labs(y="Average Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
+```
+
+## Means plotted as diamonds, overlayed with data.
+
+```{r}
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point(size = 3, pch = 23,aes(fill=Treatment),color='black',
+               alpha=.8) + 
+    geom_line()+
+    geom_point(data = experiment,
+               aes(x = Time, y = Lesion.mm,
+                   color=Treatment),
+               pch = 19,alpha=.6,size=1,
+               position=position_jitter(width=.05))+
+    # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  # alpha = .5)+
+    theme_bw()+
+    labs(y="Average Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups",
+         subtitle = "(Diamonds represent mean lesion lengths (mm)")
+```
+
+
+## Separate boxplots by Treatment, with time progression inside each subplot
+```{r}
+
+experiment %>%
+    mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
+ggplot(data = .,
+       aes(x = Time,
+           y = Lesion.mm,
+           fill=Treatment))+
+    # geom_violin()+
+    geom_boxplot()+
+    # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  # alpha = .5)+
+    facet_grid(cols=vars(Treatment))+
+    theme_bw()+
+    labs(y="Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
+```
+
+
+## Separate boxplots by Treatment, with time progression\ninside each subplot with data overlayed
+
+```{r}
+
+experiment %>%
+    mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
+ggplot(data = .,
+       aes(x = Time,
+           y = Lesion.mm,
+           fill=Treatment))+
+    # geom_violin()+
+    geom_boxplot(color='gray1',alpha=.3)+
+    geom_point(aes(color=Treatment),pch=21,
+               position=position_jitter(width=.1))+
+    # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  # alpha = .5)+
+    facet_grid(cols=vars(Treatment))+
+    theme_bw()+
+    labs(y="Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
 ```
 

@@ -584,7 +584,7 @@ ggplot(data = plot_df,
                   alpha = .5)+
     theme_bw()+
     labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         title = "Original Plot")
 
 ggplot(data = plot_df,
        aes(x = Time,
@@ -596,37 +596,39 @@ ggplot(data = plot_df,
                   alpha = .5, position=position_dodge())+
     theme_classic()+
     labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         title = "Point, line, and error-bars \"dodged\" to avoid overlap")
 
 ggplot(data = plot_df,
        aes(x = Time,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
-    geom_point(size = 6, pch = 23,aes(fill=Treatment),alpha=.5) + geom_line()+
+    geom_point(size = 3, pch = 23,aes(fill=Treatment),color='black',
+               alpha=.8) + 
+    geom_line()+
     geom_point(data = experiment,
                aes(x = Time, y = Lesion.mm,
                    color=Treatment),
-               pch = 19,alpha=.9,size=1,
+               pch = 19,alpha=.6,size=1,
                position=position_jitter(width=.05))+
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   # alpha = .5)+
     theme_bw()+
     labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         title = "Means plotted as diamonds, overlayed with data.")
 
-# Work on it
-ggplot(data = experiment,
-       aes(x = Time,
-           y = Lesion.mm,
-           fill = Treatment))+
-    # geom_violin()+
-    geom_boxplot()+
-    # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
-                  # alpha = .5)+
-    theme_bw()+
-    labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+# # Work on it
+# ggplot(data = experiment,
+#        aes(x = Time,
+#            y = Lesion.mm,
+#            fill = Treatment))+
+#     # geom_violin()+
+#     geom_boxplot()+
+#     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+#                   # alpha = .5)+
+#     theme_bw()+
+#     labs(y="Average Lesion Length (mm)",
+#          title = "Rot lesion length as a function of time for three treatment groups")
 
 library(forcats)
 experiment %>%
@@ -642,7 +644,7 @@ ggplot(data = .,
     facet_grid(cols=vars(Treatment))+
     theme_bw()+
     labs(y="Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         title = "Separate boxplots by Treatment, with time progression\ninside each subplot")
 
 
 experiment %>%
@@ -652,7 +654,7 @@ ggplot(data = .,
            y = Lesion.mm,
            fill=Treatment))+
     # geom_violin()+
-    geom_boxplot(color='gray',alpha=.3)+
+    geom_boxplot(color='gray1',alpha=.3)+
     geom_point(aes(color=Treatment),pch=21,
                position=position_jitter(width=.1))+
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
@@ -660,7 +662,7 @@ ggplot(data = .,
     facet_grid(cols=vars(Treatment))+
     theme_bw()+
     labs(y="Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         title = "Separate boxplots by Treatment, with time progression\ninside each subplot, data overlayed")
 ```
 
 (PROVIDE GITHUB LINKS TO CODE FOR EACH PLOT)
@@ -670,31 +672,49 @@ Links to related exercises and resources.
 ### All the code together
 ```
 experiment %>% 
-    # 
+    # We need to group the data by Treatment AND Time,
+    # Sinc we want to compare treatment groups at all
+    # the time points
     group_by(Treatment, Time) %>%
-    #
+    
+    # We create summaries, average and std deviation,
+    # for our dependent variable Lesion.mm
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
-    #
+            
+    # We add variable low and high to provide information
+    # for where to start and stop our error bars
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
            high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
+# -> plot_df just saves this output as plot_df.
 
-ggplot(data = plot_df,
+#Let's begin our plot.
+ggplot(data = plot_df,      # link to the data frame plot_df
+       # We want Time on the x axis, average lesion length on the y.
        aes(x = Time,
            y = average.Lesion.mm,
-           #
+           # The color aesthetic is for the point geometry,
+           # each treatment group gets a unique color
            color = Treatment,
-           #
+           # The group aesthetic is for the line geometry,
+           # the lines will connect each treatment group
            group = Treatment))+
-    #
+           
+    # With our aesthetics set, we add the point and line geometries.
     geom_point() + geom_line()+
-    #
+    
+    # Next we add the errorbar geometry, with low and high
+    # set to our ymin and ymax aesthetics.  Further, we 
+    # adjust the width of the bar and the transparency (alpha).
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   alpha = .5)+
-    #
+                  
+    # Here we add better labels to our axes
     labs(y="Average Lesion Length (mm)",
          title = "Rot lesion length as a function of time for three treatment groups") +
-    #
+         
+    # And to finish, a theme with a white background to make
+    # the error bars easier to see.
     theme_bw()
            
 # All set!

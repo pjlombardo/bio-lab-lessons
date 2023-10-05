@@ -34,6 +34,7 @@ The experiment monitored several lettuce leaves within each treatment class:
 
 At 24, 48, and 72 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 72 hrs, the soft rotted tissue was mashed up to evaluate the pH.
 
+
 ## Preparing data frames
 We will need our raw data, but filtered to only include the endpoint measurements (i.e., those at 72 hours). We save this as `experiment72`
 ```{r}
