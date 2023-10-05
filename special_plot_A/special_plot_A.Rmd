@@ -1,6 +1,6 @@
 ---
 title: "Visualizing An Endpoint Metric With Variation"
-author: P. Lombardo and G. Kwan
+author: (P. Lombardo and G. Kwan)
 output: learnr::tutorial
 runtime: shiny_prerendered
 ---

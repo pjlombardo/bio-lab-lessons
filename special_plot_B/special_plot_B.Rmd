@@ -1,6 +1,6 @@
 ---
 title: "Visualizing Metrics as Time Series, Showing Variation"
-author: P. Lombardo and G. Kwan
+author: (P. Lombardo and G. Kwan)
 output: 
     learnr::tutorial:
         theme: "cerulean"
