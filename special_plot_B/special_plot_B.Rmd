@@ -422,7 +422,7 @@ Ready to wrap it up?
 
 
 ## Finalizing the plot {data-progressive=TRUE}
-Here is our plot so far
+Here is our plot so far:
 ```{r fig.align='center',fig.width=5,fig.height=3.5, message = FALSE}
 experiment %>% 
     group_by(Treatment, Time) %>%
@@ -440,98 +440,109 @@ ggplot(data = plot_df,
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
 
-***CORRECT FROM HERE!!!***
-We want to make two modifications:
+We want to make a few modifications:
 
-1. We want better axis labels and a title; specifically, we want the $y$-axis to be "Average pH" and a title of "Leaf pH at 72 hours by Treatment."
-2. We want the $y$-axis to have markings for every unit of pH (i.e., it should be labeled 0, 1, 2, ...7).
+1. We want better axis labels and a title; specifically, we want 
+    * the $y$-axis to be "Average Lesion Length (mm)" and 
+    * a title of "Rot lesion length as a function of time for three treatment groups".
+    
+2. The error-bars overlap, making it some of them hard to see. If we make them slightly transparent, we might be better able to track where there is overlap. (We supply more options in the conclusion.)
 
-The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involes *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
+3. The gray background also makes it difficult to see the error-bars, so we want to make the background white.
+
+The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second requires adjusting the `alpha` value inside the error-bar geometry. The third we can accomplish very quickly by adding a "theme".
 
 ### Adding axis labels and a title
 Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
-```{r labels, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
-# add the fill aesthetic to the code below
+```{r labels, exercise = TRUE, exercise.lines=10, exercise.setup="axes-setup"}
+# add labs() below to change the axis labels
 ggplot(data = plot_df,
-       aes(x = Treatment,
-           y = average_pH)) +
-    geom_col(aes( fill=Treatment ))+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="new y axis", title = "this is on top")
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
 ```{r labels-hint-1}
 ggplot(data = plot_df,
-       aes(x = Treatment,
-           y = average_pH)) +
-    geom_col(aes( fill=Treatment ))+
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "...")
+    labs(y="Average Lesion Length (mm)", 
+         title = "...")
 ```
 ```{r labels-solution}
 ggplot(data = plot_df,
-       aes(x = Treatment,
-           y = average_pH)) +
-    geom_col(aes( fill=Treatment ))+
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")
+    labs(y="Average Lesion Length (mm)", 
+         title = "Rot lesion length as a function of time for three treatment groups")
 ```
 
-### Scaling the $y$-axis
-When scaling a continuous aesthetic, like `y` which records pH, we use the following
-```
-scale_y_continuous(breaks = vector_of_labels)
-```
-The `breaks` argument allows us to choose which labels we want to appear on the axis. However, we do need to provide these as a vector of numbers.  To accomplish this, I recommend using the `seq()` function.  Run the code below to get a sense of how it works.
-```{r sequence, exercise=TRUE, exercise.lines=2}
-seq(0, 7, by = 0.5)
-```
-*What code would give us a vector containing 0, 1, 2, ..., 7?* Use the code-chunk above to figure this out, because you will need it in the next exercise!
+### Backgrounds and errorbars
+In general, the `alpha = ...` setting inside a geometry will control the transparency of the `fill` or `color` aesthetic associated to the geometry. Values close to zero (like 0.1) are very see-through; whereas values close to 1 (like 0.9) are opaque.
 
-#### Exercise: adding $y$-axis labels.
-For our last exercise, add the `scale_y_continuous(breaks=...)` code to the plot. Fill in the `...` with the appropriate code to generate a our labels from 0 to 7.
-```{r scale-y, exercise = TRUE, exercise.lines=9, exercise.setup="axes-setup"}
+#### Exercise: transparent error-bars and white background
+To help us see the error-bar overlaps, let's make the transparency about 0.5. Set this parameter inside the error-bar geometry, but not in the `aes()` part.
+
+```{r scale-y, exercise = TRUE, exercise.lines=11, exercise.setup="axes-setup"}
 # add the fill aesthetic to the code below
 ggplot(data = plot_df,
-       aes(x = Treatment,
-           y = average_pH)) +
-    geom_col(aes( fill=Treatment ))+
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")
+    labs(y="Average Lesion Length (mm)", 
+         title = "Rot lesion length as a function of time for three treatment groups")+
+    theme_bw()
 ```
 ```{r scale-y-hint-1}
 ggplot(data = plot_df,
-       aes(x = Treatment,
-           y = average_pH)) +
-    geom_col(aes(fill= fill=Treatment ))+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
-    scale_y_continuous(breaks = ...)
-```
-```{r scale-y-hint-2}
-ggplot(data = plot_df,
-       aes(x = Treatment,
-           y = average_pH)) +
-    geom_col(aes(fill= fill=Treatment ))+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
-    scale_y_continuous(breaks = seq(...))
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  alpha = ...)+
+    labs(y="Average Lesion Length (mm)", 
+         title = "Rot lesion length as a function of time for three treatment groups")+
+    theme_bw()
 ```
 ```{r scale-y-solution}
 ggplot(data = plot_df,
-       aes(x = Treatment,
-           y = average_pH)) +
-    geom_col(aes(fill=Treatment))+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
-    scale_y_continuous(breaks = seq(0,7,by = 1))
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  alpha = 0.3)+
+    labs(y="Average Lesion Length (mm)", 
+         title = "Rot lesion length as a function of time for three treatment groups")+
+    theme_bw()
 ```
+**Quick notes:**
+
+* We added `theme_bw()` to the end of the plot. This is a special ggplot "theme" (see [more here](https://ggplot2.tidyverse.org/reference/ggtheme.html)) that comes equipped with a white background. 
+* The transparency did not seem to make the error-bars easier to read. One might decide to skip that component. The white background does seem to help though! 
 
 ***
 ***
 
 ***Excellent work!***
 
-You have created a publication worthy plot of the experiment data.  The next section is a conclusion where we wrap up some of our ideas and present all the code we generated for this plot. 
+You have created a publication worthy plot of the experiment data.  The next section is a conclusion where we wrap up some of our ideas, offer some alternative plots for this data, and present all the code we generated! 
 
 Continue on to review!
 
@@ -553,62 +564,103 @@ Notes, comments, summaries.
 
 #### More options for this data!
 There is always more than one way to visualize data. Here are a few other options that might be decent choices for this experiment and its results.  Code for these plots can be found here (INSERT LINK HERE !!!)
-```{r}
+
+```{r message = FALSE}
 # preparing the plot data frame
 experiment %>% 
-    filter(Time=="72hr")->exp2
-experiment %>% 
-    filter(Time=="72hr") %>%
-    group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-     mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH) -> plot_df
+    group_by(Treatment, Time) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
            
-# Creating our plot
-g1<-ggplot(data = plot_df,     
-       aes(x = Treatment, y = average_pH))+
-    geom_col(aes(fill = Treatment))+
-    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
-    scale_y_continuous(breaks = seq(0,7,by = 1))
-g2<-ggplot(data = plot_df,     
-       aes(x = Treatment, y = average_pH))+
-    geom_col(aes(fill = Treatment),alpha = .6)+
-    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
-    scale_y_continuous(breaks = seq(0,7,by = 1))
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  alpha = .5)+
+    theme_bw()+
+    labs(y="Average Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
 
-p1<-g1 + scale_fill_brewer(palette="Accent")+theme_bw()+labs(title="Adjust color schemes with `brewer`")
-p2<-g2 + geom_point(data = exp2,
-                    aes(x=Treatment,y=pH,fill=Treatment),
-                    position=position_jitter(width=.2),
-                    pch = 21)+labs(y="pH",title="Overlay data to visualize individual values in each group",subtitle = "(Columns indicate the mean pH for each group.)")
-p3<-ggplot(data = exp2,     
-       aes(x = Treatment, y = pH))+
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point(position=position_dodge(width=.095)) + geom_line(position=position_dodge(width=.095))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  alpha = .5, position=position_dodge())+
+    theme_classic()+
+    labs(y="Average Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
+
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point(size = 6, pch = 23,aes(fill=Treatment),alpha=.5) + geom_line()+
+    geom_point(data = experiment,
+               aes(x = Time, y = Lesion.mm,
+                   color=Treatment),
+               pch = 19,alpha=.9,size=1,
+               position=position_jitter(width=.05))+
+    # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  # alpha = .5)+
+    theme_bw()+
+    labs(y="Average Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
+
+# Work on it
+ggplot(data = experiment,
+       aes(x = Time,
+           y = Lesion.mm,
+           fill = Treatment))+
+    # geom_violin()+
     geom_boxplot()+
-    geom_violin(aes(fill = Treatment),alpha = .3,color=NA)+
-    labs(y="pH", title = "Mix boxplots and violin plots to see the\ndistributions by treatment group")+
-    scale_y_continuous(breaks = seq(0,7,by = 1))+theme_bw()
+    # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  # alpha = .5)+
+    theme_bw()+
+    labs(y="Average Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
 
-p4<-ggplot(data = plot_df,     
-       aes(x = Treatment, y = average_pH))+
-    geom_errorbar(aes(ymin = low, ymax = high,color=Treatment), width = 0.5,linewidth=.7)+
-    geom_point(aes(fill = Treatment),pch = 21,size=3)+
-    labs(y="Average pH", title = "Confidence intervals only")+
-    scale_y_continuous(limits=c(3,7),breaks = seq(3,7,by = 1))+theme_bw()
-```
-```{r fig.align='center',fig.width=5}
-p1
-```
-```{r fig.align='center',fig.width=5}
-p4
-```
-```{r fig.align='center',fig.width=5}
-p2
-```
-```{r fig.align='center',fig.width=5}
-p3
+library(forcats)
+experiment %>%
+    mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
+ggplot(data = .,
+       aes(x = Time,
+           y = Lesion.mm,
+           fill=Treatment))+
+    # geom_violin()+
+    geom_boxplot()+
+    # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  # alpha = .5)+
+    facet_grid(cols=vars(Treatment))+
+    theme_bw()+
+    labs(y="Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
+
+
+experiment %>%
+    mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
+ggplot(data = .,
+       aes(x = Time,
+           y = Lesion.mm,
+           fill=Treatment))+
+    # geom_violin()+
+    geom_boxplot(color='gray',alpha=.3)+
+    geom_point(aes(color=Treatment),pch=21,
+               position=position_jitter(width=.1))+
+    # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  # alpha = .5)+
+    facet_grid(cols=vars(Treatment))+
+    theme_bw()+
+    labs(y="Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups")
 ```
 
 (PROVIDE GITHUB LINKS TO CODE FOR EACH PLOT)
@@ -617,51 +669,34 @@ Links to related exercises and resources.
 
 ### All the code together
 ```
-# preparing the plot data frame
 experiment %>% 
-    # keep only rows at the final time point (i.e., the end)
-    filter(Time=="72hr") %>%
-    
-    # We want summaries for each treatment group, so we
-    # group by Treatment
-    group_by(Treatment) %>%
-    
-    # Now we make our summaries, mean and std. deviation
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-            
-    # We need to add two new variables to control the 
-    # start and stop heights of our error-bars.
-    mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH) -> plot_df
+    # 
+    group_by(Treatment, Time) %>%
+    #
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    #
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
+
+ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           #
+           color = Treatment,
+           #
+           group = Treatment))+
+    #
+    geom_point() + geom_line()+
+    #
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+                  alpha = .5)+
+    #
+    labs(y="Average Lesion Length (mm)",
+         title = "Rot lesion length as a function of time for three treatment groups") +
+    #
+    theme_bw()
            
-    # The ->plot_df saves our work under the name plot_df
-    
-# Creating our plot
-ggplot(data = plot_df,      # link to our plotting data
-       # set our axis aesthetics
-       aes(x = Treatment, y = average_pH))+
-       
-    # add the column geometry for the bars, 
-    # the fill aesthetic chooses a new color for each 
-    # treatment group.
-    
-    geom_col(aes(fill = Treatment))+
-    
-    # add the errorbars, using the ymin and ymax aesthetics
-    # we use width = 0.1 to adjust the width of the error-bars
-    
-    geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    
-    # add y-axis label and title
-    
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
-    
-    # use breaks to define how we want to label the markings
-    # on the y-axis
-    
-    scale_y_continuous(breaks = seq(0,7,by = 1))
-    
 # All set!
 ```
 

@@ -406,6 +406,7 @@ We have an excellent working plot right now, and it looks even better than your 
 Ready to wrap it up?
 
 
+
 ## Finalizing the plot {data-progressive=TRUE}
 Here is our plot so far
 ```{r fig.align='center',fig.width=5,fig.height=2.5}
@@ -425,10 +426,12 @@ ggplot(data = plot_df,
 
 We want to make two modifications:
 
-1. We want better axis labels and a title; specifically, we want the $y$-axis to be "Average pH" and a title of "Leaf pH at 72 hours by Treatment."
+1. We want better axis labels and a title; specifically, we want 
+    * the $y$-axis to be "Average pH" and 
+    * a title of "Leaf pH at 72 hours by Treatment."
 2. We want the $y$-axis to have markings for every unit of pH (i.e., it should be labeled 0, 1, 2, ...7).
 
-The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involes *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
+The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involves *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
 
 ### Adding axis labels and a title
 Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
@@ -513,9 +516,10 @@ ggplot(data = plot_df,
 
 ***Excellent work!***
 
-You have created a publication worthy plot of the experiment data.  The next section is a conclusion where we wrap up some of our ideas and present all the code we generated for this plot. 
+You have created a publication worthy plot of the experiment data.  The next section is a conclusion where we wrap up some of our ideas, offer some alternative plots for this data, and present all the code we generated!
 
 Continue on to review!
+
 
 
 ## Conclusions
