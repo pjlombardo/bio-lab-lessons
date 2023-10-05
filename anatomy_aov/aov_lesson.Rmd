@@ -43,7 +43,7 @@ At 24, 48, and 72 hours, disease progression was monitored as the length of the 
 
 ### Exploring the data
 Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower left to see more rows of the data.
-```{r explore-p1, exercise = TRUE, exercise.lines=3}
+```{r p-value, exercise = TRUE, exercise.lines=3}
 experiment
 ```
 *Note:* The data is in "tidy" format already. This means that each row corresponds to a measurement taken on a given leave at a particular time point (24hr, 48hr, or 72hr).  Each endpoint metric, as well as a time and treatment labels, are stored in their own columns.^[Also note that `pH` has `NA` values whenever `Time` is not equal to 72 hours; this is because we do not measure pH until the end of the experiment.]
@@ -185,17 +185,80 @@ experiment %>%
     filter(Time == "72hr") %>%
     select(Treatment, Lesion.mm, pH)
 ```
+**Answer Check:** There should be 21 rows in this data frame, and three columns.
+<br>
+We have stored this data frame under the shortcut name `final_df`. We will use it for the rest of the sections and exercises. For now, we will focus on `Lesion.mm` as our dependent variable and pursue that particular ANOVA. We will not use `pH` until the review exercises.
 
-We have stored this data frame under the shortcut name `final_df`. We will use it for the rest of the sections and exercises. (*Note*: You will not use `pH` until the review exercises.)
+#### Great work!
+In the next two sections, we will fit an ANOVA and explore the whether there are differences in the mean lesion length among our three treatment groups: `Wild`, `budB`, and `Control`.
 
-### Anatomy of `aov()`
+Here we go!
+
+## Running an ANOVA {data-progressive=TRUE}
+```{r aov-setup, include = FALSE}
+experiment %>%
+    filter(Time == "72hr") %>%
+    select(Treatment, Lesion.mm, pH)->final_df
+lesion.aov<-aov(Lesion.mm ~ Treatment, data = final_df)
+```
+
+In `R`, we use the `aov()` function to "fit" an ANOVA.  In its simplest application, which is fine for us, it uses two arguments:
+
+* `formula`: which we use to specify the dependent and independent variables (`Lesion.mm ~ Treatment`), and
+* `data`: which we use to identify the data frame with our data (`final_df`).
+
+The syntax is `aov(depend_var ~ indep_var, data = df_name)`.
+
+#### Exercise: Fit an ANOVA!
+Fill in the code below to fit an ANOVA and save the output to the name `lesion.aov`.  The last line calls the saved output so you can see that it worked.
+```{r aov1, exercise = TRUE, exercise.lines=3, exercise.setup="aov-setup"}
+lesion.aov <- aov(...)
+lesion.aov
+```
+```{r aov1-hint-1}
+lesion.aov <- aov(..., data = final_df)
+lesion.aov
+```
+```{r aov1-hint-2}
+lesion.aov <- aov(Lesion.mm ~ ..., data = final_df)
+lesion.aov
+```
+```{r aov1-solution}
+lesion.aov <- aov(Lesion.mm ~ Treatment, data = final_df)
+lesion.aov
+```
+**Answer Check:** You should see some output, but perhaps not what you were expecting.  If this worked, however, you will find `Residual standard error: 18.77679`.
+
+### ANOVA results and interpretation
+Yes... we're all thinking the same thing.  ***Where's my $P$-value!?***
+
+The default report from the `aov()` function does not report a $P$-value, but we can get it easily.  Since we saved the ANOVA output under the name `lesion.aov`, we can use other functions to get more information.
+
+One such function is `summary()`, which will create a standard ANOVA table, and also report our $P$-value for the hypothesis test.
+
+#### Exercies: extract the ANOVA table and the $P$-value
+Put our saved ANOVA, `lesion.aov`, inside the `summary()` function to see a new output!
+```{r get-p, exercise = TRUE, exercise.lines=3, exercise.setup="aov-setup"}
+summary(...)
+```
+```{r get-p-solution}
+summary(lesion.aov)
+```
+**Answer Check**: You should see a new output table with a value of `0.0136` below a column heading of `Pr(>F)`.
+
+### Interpreting our summary output
+So, *where the $P$-value*?  Great question!
+
+It's not obvious, but the value below the column heading `Pr(>F)` is the $P$-value for this ANOVA. So, for our ANOVA involving potential differences in mean lesion length between our treatment groups, *we have a $P$-value of 0.0136.*
 
 
-Lesion.mm versus Treatment
+***KEEP GOING FROM HERE***
 
-## ANOVA results and interpretation
+But, what does that mean? Notice that the $P$-value is ***smaller than*** 0.05 (a standard threshold used for comparison). 
 
-have them do data check where they just print `lesion.aov` and read $P$-value
+In broad terms, our sample provides sufficient evidence to suggest there is an association between the `Treatment` variable and the `Lesion.mm` variable.
+
+
 
 ## Tukey's Honest Significant Difference Test
 output and check-all-that apply to see which have "sig differences"
