@@ -9,7 +9,8 @@ runtime: shiny_prerendered
 library(learnr)
 library(dplyr)
 library(ggplot2)
-library(patchwork)
+library(tidyr)
+# library(patchwork)
 knitr::opts_chunk$set(echo = FALSE)
 experiment <- read.csv('data/experiment_data.csv', header = T)
 ```
@@ -535,7 +536,20 @@ Notes, comments, summaries.
 
 #### More options for this data!
 There is always more than one way to visualize data. Here are a few other options that might be decent choices for this experiment and its results.  Code for these plots can be found here (INSERT LINK HERE !!!)
-```{r}
+
+```{r, echo=FALSE}
+radioButtons("plot_nm","Choose a plot!",
+             c("Original Plot" = "p1",
+                 "Plot 1" = "p2",
+                 "Plot 2" = "p3",
+                 "Plot 3" = "p4",
+               "Plot 4" = "p5",
+               "Plot 5" = "p6"),
+             inline=TRUE)
+plotOutput("distPlot")
+```
+
+```{r, context="server"}
 # preparing the plot data frame
 experiment %>% 
     filter(Time=="72hr")->exp2
@@ -579,19 +593,55 @@ p4<-ggplot(data = plot_df,
     geom_point(aes(fill = Treatment),pch = 21,size=3)+
     labs(y="Average pH", title = "Confidence intervals only")+
     scale_y_continuous(limits=c(3,7),breaks = seq(3,7,by = 1))+theme_bw()
+
+measurement_type.labs<-c("Lesion Length (mm)","pH")
+names(measurement_type.labs)<-c("Lesion.mm","pH")
+experiment %>%
+    filter(Time=="72hr") %>%
+    pivot_longer(
+        cols=c("Lesion.mm","pH"),
+        names_to="measurement_type",
+        values_to="measurements"
+    ) %>% 
+    ggplot(data = .,
+           aes(x = Treatment,
+               y=measurements))+
+    geom_boxplot(aes(fill=Treatment),alpha=.3,colour=NA)+
+    geom_point(alpha=.3, position=position_jitter(width=.2))+
+    geom_segment(data = experiment %>%
+                    filter(Time=="72hr") %>%
+                    pivot_longer(
+                        cols=c("Lesion.mm","pH"),
+                        names_to="measurement_type",
+                        values_to="measurements"
+                    ) %>%
+                     group_by(measurement_type,Treatment) %>%
+                     summarise(meanMeas = mean(measurements)),
+                 aes(x = rep(c(2,3,1)-.4,2), xend = rep(c(2,3,1)+.4,2), y = meanMeas, yend=meanMeas,color=Treatment))+
+    facet_grid(rows=vars(measurement_type),
+               scales="free_y",
+               labeller = labeller(measurement_type=measurement_type.labs))+
+    labs(y="",title="Comparing endpoint metrics of pH and Lesion length (mm)",
+         subtitle="Bars represent means, boxes cover the interquartile range.")+
+    theme_bw()+theme(legend.position = "none") -> p5
+
+output$distPlot <- renderPlot({
+  if (input$plot_nm=="p1"){
+      g1
+  } else if (input$plot_nm=="p2"){
+      p1
+  } else if (input$plot_nm=="p3"){
+      p4
+  } else if (input$plot_nm=="p4"){
+      p2
+  } else if (input$plot_nm=="p5"){
+      p3
+  } else {
+      p5
+  }
+})
 ```
-```{r fig.align='center',fig.width=5}
-p1
-```
-```{r fig.align='center',fig.width=5}
-p4
-```
-```{r fig.align='center',fig.width=5}
-p2
-```
-```{r fig.align='center',fig.width=5}
-p3
-```
+
 
 (PROVIDE GITHUB LINKS TO CODE FOR EACH PLOT)
 

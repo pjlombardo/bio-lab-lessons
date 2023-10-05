@@ -13,6 +13,9 @@ library(ggplot2)
 library(tidyr)
 knitr::opts_chunk$set(echo = FALSE)
 experiment <- read.csv('data/experiment_data.csv', header = T)
+final_df<-experiment %>%
+    filter(Time=="72hr") %>%
+    select(Treatment,Lesion.mm,pH)
 ```
 
 ## Understanding the experiment
@@ -48,7 +51,7 @@ experiment
 > Important Idea: In order for the ANOVA code in this lesson to work properly, the data *must* be in tidy format!
 
 
-```{r dependant-question}
+```{r dependent-question}
 question("Read the description of the \"Experiment Details\" once more. Of the variables in the data frame, which correspond to measurements that we will use to compare the treatment groups at the end of the experiment. *Select all that apply.*",
     answer("Leaf_ID"),
     answer("pH", correct = TRUE),
@@ -63,7 +66,7 @@ question("Read the description of the \"Experiment Details\" once more. Of the v
   )
 ```
 
-```{r independant-question}
+```{r independent-question}
 question("Which variable in the data frame identifies the groups we want to compare?",
     answer("Leaf_ID"),
     answer("pH"),
@@ -83,21 +86,110 @@ We are now acquainted (or re-acquainted) with the data, and we have identified t
 
 Shall we get started?
 
-## Getting Ready {data-progressive = TRUE}
+## Quick ANOVA review {data-progressive=TRUE}
 
+Let's get started with a quick review of analysis of variance.  ANOVA is a statistical hypothesis test used to "compare population means for several populations" based on evidence from samples collected from these populations. But what do we mean by "compare"?
 
-### Review independent and dependent variables
-perhaps a multiple choice or something here.
+As a hypothesis test, ANOVA is equipped with a *null hypothesis*, which we hope our samples will provide evidence ***against***.  For an ANOVA, the null hypothesis is
 
-Introduce `dependent ~ independent` notation.
+> $H_0$: the population means are equal across *all* groups.<br>  ($\mu_{_\text{group 1}} = \mu_{_\text{group 2}} = \mu_{_\text{group 3}} = \dots = \mu_{_\text{group $k$}}$)
+
+As with all hypothesis tests, we either conclude by
+
+* **rejecting $H_0$**: this means our samples (more specifically, *sample means*) provided enough evidence to suggest *at least one group mean* is different from the rest.
+* **failing to reject $H_0$**: this means our samples did not provide enough evidence to suggest that the group means are different at the population level.
+
+### A new perspective
+There is another way to view ANOVA that help makes some of the `R` code more intuitive. ANOVA is a test that, like others, provides a method of testing for an ***association*** between an *independent variable* and a *dependent variable*.  Roughly speaking:
+
+* **Independent variable:** this is typically a variable that researchers have some control over, and they let it vary to test for some sort of response in the *dependent variable.*
+
+* **Independent variable:** this is typically a variable that researchers use to measure the response to potential changes in an *independent variable*.  The researchers cannot (and should not) control what this variable is doing!
+
+When looking for an association, we are simply asking:
+
+> *Does knowing something about the **independent variable** give us information about what will happen with the **dependent variable**?
+
+For an ANOVA, we also require (among other assumptions) that:
+
+* the *independent variable* is a categorical (grouping) variable, with at least three potential levels (groups); and
+* the *dependent variable* is a quantitative variable.
+
+So translating the ideas above, an ANOVA attempts to answer the question:
+
+> Does knowing something about a *grouping variable* give us information about a *quantitative measurement*?
+
+```{r grouping-question}
+question("In the P. carotovorum experiment, what variable from the data frame do we think of as the researcher controlling and varying for the purpose of looking for some sort of response?",
+    answer("Sample"),
+    answer("pH"),
+    answer("Treatment", correct = TRUE),
+    answer("Lesion.mm"),
+    allow_retry = T,
+    random_answer_order = T,
+    incorrect = paste(random_encouragement(),"Remember we inoculated lettuce leaves with different bacteria: wild type, budB mutant, and the control (no inoculation). What variable helps us keep these groups straight?"),
+    post_message = paste(random_praise(), "The `Treatment` variable is our independent variable for this experiment. We might also call it our grouping variable, if we already know we are running an ANOVA.")
+  )
+```
+
+```{r response-question}
+question("In the P. carotovorum experiment, what variable or variables from the data frame do we think of as measuring the *response* to changes administered by the researcher?",
+    answer("Sample", message=paste(random_encouragement(),"Remember the effectiveness of P. carotovorum in rotting the leaf can be monitored by the growth/size of rot lesion, and we expect that bacteria in certain groups will also try to control the pH of the rot lesion.")),
+    answer("pH", correct = TRUE),
+    answer("Treatment", message=paste(random_encouragement(),"Remember the effectiveness of P. carotovorum in rotting the leaf can be monitored by the growth/size of rot lesion, and we expect that bacteria in certain groups will also try to control the pH of the rot lesion.")),
+    answer("Lesion.mm", correct = TRUE),
+    allow_retry = T,
+    random_answer_order = T,
+    post_message = paste(random_praise(), "The `pH` and the `Lesion.mm` are potential dependent variables for this experiment. This means we could run two ANOVAs <ul> <li> one comparing how pH responds to Treatment, and</li> <li>one comparing how lesion length responds to Treatment.</li></ul>")
+  )
+```
+
+#### Keep up the great work!
+
+## Getting ready{data-progressive=TRUE}
+In the previous section we determined our data for the *P. carotovorum* experiment could potentially inform *two* different ANOVAs.  For demonstration, we will focus on the ANOVA with
+
+* **Independent variable** is `Treatment`, differentiating the groups of lettuce leaves that were inoculated differently (or not at all, as is the case with the control); and
+* **Dependent variable** is `Lesion.mm`, a response measuring the efficacy of the inoculated bacteria at rotting the leaf.
+
+(*Note:* We will save the ANOVA involving `pH` for the review exercises.)
+
+Many `R` functions, and statistical analyses, require the researcher to specify the independent and dependent variables in their code.  In `R`, we can do this quickly using the syntax `dependent_var ~ indendent_var`. 
+
+So, for our case, we will often see code that uses `Lesion.mm ~ Treatment`.
 
 ### Preparing our analysis data frame
+Recall that we are only analyzing data from the *end of the experiment.* This means we want rows where `Time` equals (`==`) the "72hr" mark.  Use the code chunk below to do the following:
 
-filter to include 72hr measurements (end points), and select Treatment, Lesion.mm, and pH.
+* Use the `filter()` command to keep only rows with data from the end of the experiment; and
+* Use the `select()` command to keep the `Treatment`, `Lesion.mm`, and `pH` variables.
 
-### anatomy of aov()
+Sift through the code to verify that you have the data you need to continue.
+```{r filter, exercise = TRUE, exercise.lines=3}
+experiment %>%
+    filter(...) %>%
+    select(...)
+```
+```{r filter-hint-1}
+experiment %>%
+    filter(...) %>%
+    select(Treatment, Lesion.mm, pH)
+```
+```{r filter-hint-2}
+experiment %>%
+    filter(Time == "...") %>%
+    select(Treatment, Lesion.mm, pH)
+```
+```{r filter-solution}
+experiment %>%
+    filter(Time == "72hr") %>%
+    select(Treatment, Lesion.mm, pH)
+```
 
-Reiterate the improtance of tidy format
+We have stored this data frame under the shortcut name `final_df`. We will use it for the rest of the sections and exercises. (*Note*: You will not use `pH` until the review exercises.)
+
+### Anatomy of `aov()`
+
 
 Lesion.mm versus Treatment
 

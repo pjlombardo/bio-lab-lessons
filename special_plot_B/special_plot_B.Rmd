@@ -566,7 +566,19 @@ Notes, comments, summaries.
 #### More options for this data!
 There is always more than one way to visualize data. Here are a few other options that might be decent choices for this experiment and its results.  Code for these plots can be found here (INSERT LINK HERE !!!)
 
-```{r message = FALSE}
+```{r, echo=FALSE}
+radioButtons("plot_nm","Choose a plot!",
+             c("Original Plot" = "p1",
+                 "Plot 1" = "p2",
+                 "Plot 2" = "p3",
+                 "Plot 3" = "p4",
+               "Plot 4" = "p5",
+               "Plot 5" = "p6"),
+             inline=TRUE)
+plotOutput("distPlot")
+```
+
+```{r message = FALSE, context="server"}
 # preparing the plot data frame
 experiment %>% 
     group_by(Treatment, Time) %>%
@@ -575,7 +587,7 @@ experiment %>%
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
            high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
            
-ggplot(data = plot_df,
+p1<-ggplot(data = plot_df,
        aes(x = Time,
            y = average.Lesion.mm,
            color = Treatment,
@@ -585,9 +597,23 @@ ggplot(data = plot_df,
                   alpha = .5)+
     theme_bw()+
     labs(y="Average Lesion Length (mm)",
-         title = "Original Plot")
+         title = "Rot lesion length as a function of time for three treatment groups")
 
-ggplot(data = plot_df,
+
+p3<-ggplot(data = plot_df,
+       aes(x = Time,
+           y = average.Lesion.mm,
+           color = Treatment,
+           group = Treatment))+
+    geom_point() + geom_line()+
+    geom_ribbon(aes(ymin=low, ymax =high, fill=Treatment),
+                  alpha = .3)+
+    theme_bw()+
+    labs(y="Average Lesion Length (mm)",
+         title = "Using 'ribbons' rather than error-bars")
+
+
+p2<-ggplot(data = plot_df,
        aes(x = Time,
            y = average.Lesion.mm,
            color = Treatment,
@@ -599,7 +625,7 @@ ggplot(data = plot_df,
     labs(y="Average Lesion Length (mm)",
          title = "Point, line, and error-bars \"dodged\" to avoid overlap")
 
-ggplot(data = plot_df,
+p4<-ggplot(data = plot_df,
        aes(x = Time,
            y = average.Lesion.mm,
            color = Treatment,
@@ -630,9 +656,8 @@ ggplot(data = plot_df,
 #     theme_bw()+
 #     labs(y="Average Lesion Length (mm)",
 #          title = "Rot lesion length as a function of time for three treatment groups")
-
 library(forcats)
-experiment %>%
+p5<-experiment %>%
     mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
 ggplot(data = .,
        aes(x = Time,
@@ -647,8 +672,7 @@ ggplot(data = .,
     labs(y="Lesion Length (mm)",
          title = "Separate boxplots by Treatment, with time progression\ninside each subplot")
 
-
-experiment %>%
+p6<-experiment %>%
     mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
 ggplot(data = .,
        aes(x = Time,
@@ -663,7 +687,25 @@ ggplot(data = .,
     facet_grid(cols=vars(Treatment))+
     theme_bw()+
     labs(y="Lesion Length (mm)",
-         title = "Separate boxplots by Treatment, with time progression\ninside each subplot, data overlayed")
+         title = "Boxplots with data overlayed")
+
+
+output$distPlot <- renderPlot({
+  if (input$plot_nm=="p1"){
+      p1
+  } else if (input$plot_nm=="p2"){
+      p2
+  } else if (input$plot_nm=="p3"){
+      p3
+  } else if (input$plot_nm=="p4"){
+      p4
+  } else if (input$plot_nm=="p5") {
+      p5
+  } else {
+      p6
+  }
+})
+
 ```
 
 (PROVIDE GITHUB LINKS TO CODE FOR EACH PLOT)
