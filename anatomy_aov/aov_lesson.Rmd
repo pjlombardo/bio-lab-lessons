@@ -1,6 +1,8 @@
 ---
-title: "Template `learnr` tutorial"
-output: learnr::tutorial
+title: "Applying ANOVA to Experiment Data"
+output: 
+    learnr::tutorial:
+        theme: "journal"
 runtime: shiny_prerendered
 ---
 
@@ -8,30 +10,108 @@ runtime: shiny_prerendered
 library(learnr)
 library(dplyr)
 library(ggplot2)
+library(tidyr)
 knitr::opts_chunk$set(echo = FALSE)
+experiment <- read.csv('data/experiment_data.csv', header = T)
 ```
 
-## Experimental Set Up
-Review experiment and data
+## Understanding the experiment
+In this lesson, we will learn how to use Analysis of Variance (ANOVA) to test for statistically significant differences in means for three treatment groups. The data, and the description below, were generously provided by Dr. Grace Kwan.
 
-### Exploring data set, finalizing data.
-have them explore with `head(experiment)`
+#### Abstract
 
-filter to include 72hr measurements
+*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. You have probably seen P. carotovorum in action if you have ever left some fresh produce in the refrigerator too long and came back to a slimy, watery mess. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients -- nutrients that support the continued growth of the bacterial pathogen.*
 
-## Review independent and dependent variables
+*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme's activity diminishes. Pathogens may need to regulate the pH of their environment in order to ensure that their enzymes function optimally. *
+
+*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to break down plant tissues (i.e., rot them). P. carotovorum uses the BudB protein to limit acid production by providing an alternate fermentation pathway that results in a product of neutral pH.*
+
+### Experiment details
+The experiment monitored several lettuce leaves within each treatment class:
+
+* Three control leaves without bacteria (`Control`)
+* Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
+* Nine leaves inoculated with $\Delta$budB mutant (`budB`).
+
+At 24, 48, and 72 hours, disease progression was monitored as the length of the soft rot area in millimeters (`Lesion.mm`). At 72 hours, the soft rotted tissue was mashed up to evaluate the pH. 
+
+***We are primarily interested in differences in lesion length and pH between the treatment groups at the end of the experiment.***
+
+
+### Exploring the data
+Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower left to see more rows of the data.
+```{r explore-p1, exercise = TRUE, exercise.lines=3}
+experiment
+```
+*Note:* The data is in "tidy" format already. This means that each row corresponds to a measurement taken on a given leave at a particular time point (24hr, 48hr, or 72hr).  Each endpoint metric, as well as a time and treatment labels, are stored in their own columns.^[Also note that `pH` has `NA` values whenever `Time` is not equal to 72 hours; this is because we do not measure pH until the end of the experiment.]
+
+> Important Idea: In order for the ANOVA code in this lesson to work properly, the data *must* be in tidy format!
+
+
+```{r dependant-question}
+question("Read the description of the \"Experiment Details\" once more. Of the variables in the data frame, which correspond to measurements that we will use to compare the treatment groups at the end of the experiment. *Select all that apply.*",
+    answer("Leaf_ID"),
+    answer("pH", correct = TRUE),
+    answer("Treatment"),
+    answer("Time"),
+    answer("Lesion.mm",correct = TRUE),
+    answer("Sample"),
+    allow_retry = T,
+    random_answer_order = T,
+    incorrect = paste(random_encouragement(),"What metrics will we use to differentiate the treatment groups? See the \"Experiment Details\" section."),
+    post_message = random_praise()
+  )
+```
+
+```{r independant-question}
+question("Which variable in the data frame identifies the groups we want to compare?",
+    answer("Leaf_ID"),
+    answer("pH"),
+    answer("Treatment", correct = TRUE),
+    answer("Time"),
+    answer("Lesion.mm"),
+    answer("Sample"),
+    allow_retry = T,
+    random_answer_order = T,
+    incorrect = paste(random_encouragement(),"Remember we are looking for differences between wild type, budB mutant, and the control. What variable helps us keep these groups straight?"),
+    post_message = random_praise()
+  )
+```
+
+### Great work so far!
+We are now acquainted (or re-acquainted) with the data, and we have identified the appropriate variables of interest for our ANOVA. In the next sections, we will review the process of running an ANOVA to compare the mean lesion length at the end of the experiment for each treatment group. Our final section will provide an opportunity to test your skills by doing the same analysis with `pH` as the endpoint metric. 
+
+Shall we get started?
+
+## Getting Ready {data-progressive = TRUE}
+
+
+### Review independent and dependent variables
 perhaps a multiple choice or something here.
 
 Introduce `dependent ~ independent` notation.
 
-## anatomy of aov(), getting results
-ph versus Treatment
+### Preparing our analysis data frame
+
+filter to include 72hr measurements (end points), and select Treatment, Lesion.mm, and pH.
+
+### anatomy of aov()
+
+Reiterate the improtance of tidy format
+
+Lesion.mm versus Treatment
+
+## ANOVA results and interpretation
+
+have them do data check where they just print `lesion.aov` and read $P$-value
 
 ## Tukey's Honest Significant Difference Test
 output and check-all-that apply to see which have "sig differences"
 
+Visualizing pair-wise difference in means?
+
 ## Practice exercises 
-same analysis but for lesion by Treatment
+same analysis but for pH by Treatment
 
 
 ***

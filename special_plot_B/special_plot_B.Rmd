@@ -70,6 +70,7 @@ Shall we get started?
 
 
 
+
 ## Planning our plot
 Your co-author asks whether you can build the following plot in `ggplot2`; she provides a quick, hand-drawn sketch:
 

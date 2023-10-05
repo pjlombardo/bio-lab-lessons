@@ -10,6 +10,7 @@ output:
 ```{r, echo = FALSE, include =FALSE}
 library(dplyr)
 library(ggplot2)
+library(tidyr)
 library(patchwork)
 experiment <- read.csv('data/experiment_data.csv', header = T)
 ```
@@ -130,6 +131,42 @@ ggplot(data = experiment72,
     geom_violin(aes(fill = Treatment),alpha = .3,color=NA)+
     labs(y="pH", title = "Mix boxplots and violin plots to see the\ndistributions by treatment group")+
     scale_y_continuous(breaks = seq(0,7,by = 1))+theme_bw()
+```
+
+## Looking at two endpoint metrics at once with `facet_wrap`
+In this
+```{r message=FALSE}
+# better way to do this?
+measurement_type.labs<-c("Lesion Length (mm)","pH")
+names(measurement_type.labs)<-c("Lesion.mm","pH")
+experiment %>%
+    filter(Time=="72hr") %>%
+    pivot_longer(
+        cols=c("Lesion.mm","pH"),
+        names_to="measurement_type",
+        values_to="measurements"
+    ) %>% 
+    ggplot(data = .,
+           aes(x = Treatment,
+               y=measurements))+
+    geom_boxplot(aes(fill=Treatment),alpha=.3,colour=NA)+
+    geom_point(alpha=.3, position=position_jitter(width=.2))+
+    geom_segment(data = experiment %>%
+                    filter(Time=="72hr") %>%
+                    pivot_longer(
+                        cols=c("Lesion.mm","pH"),
+                        names_to="measurement_type",
+                        values_to="measurements"
+                    ) %>%
+                     group_by(measurement_type,Treatment) %>%
+                     summarise(meanMeas = mean(measurements)),
+                 aes(x = rep(c(2,3,1)-.4,2), xend = rep(c(2,3,1)+.4,2), y = meanMeas, yend=meanMeas,color=Treatment))+
+    facet_grid(rows=vars(measurement_type),
+               scales="free_y",
+               labeller = labeller(measurement_type=measurement_type.labs))+
+    labs(y="",title="Comparing endpoint metrics of pH and Lesion length (mm)",
+         subtitle="Bars represent means, boxes cover the interquartile range.")+
+    theme_bw()+theme(legend.position = "none")
 ```
 
 
