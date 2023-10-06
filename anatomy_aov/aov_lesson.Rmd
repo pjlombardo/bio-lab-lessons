@@ -404,7 +404,7 @@ The last section allows you to practice running an ANOVA, a Tukey HSD, and refle
 
 Challenge accepted? Onward!
 
-## Practice exercises 
+## Practice exercises {data-progressive=TRUE}
 Recall from the abstract of this experiment that
 
 *Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme's activity diminishes. Pathogens may need to regulate the pH of their environment in order to ensure that their enzymes function optimally. *
@@ -416,15 +416,12 @@ In the code-chunk below, do the following:
 
 1. Fit an ANOVA that explores how `pH` may be associated with `Treatment` groups; save the output to `pH.aov`.
 2. Print the appropriate summary to find the $P$-value of this ANOVA.
-3. *If this $P$-value is less than 0.05*, run a Tukey HSD to explore pair-wise differences.
 
 We can use `final_df` for our data set, since we included `pH` in the variables.
-```{r ph-anova, exercise = TRUE, exercise.lines=6}
+```{r ph-anova, exercise = TRUE, exercise.lines=5}
 # Code for 1
 
 # Code for 2
-
-# Code for 3
 
 ```
 ```{r ph-anova-hint-1}
@@ -432,45 +429,86 @@ We can use `final_df` for our data set, since we included `pH` in the variables.
 pH.aov <- aov(..., data = final_df)
 # Code for 2
 
-# Code for 3
-
 ```
 ```{r ph-anova-hint-2}
 # Code for 1
 pH.aov <- aov(pH~Treatment, data = final_df)
 # Code for 2
 summary(...)
-# Code for 3
 
-```
-```{r ph-anova-hint-3}
-# Code for 1
-pH.aov <- aov(pH~Treatment, data = final_df)
-# Code for 2
-summary(pH.aov)
-# Code for 3
-TukeyHSD(...)
 ```
 ```{r ph-anova-solution}
 # Code for 1
 pH.aov <- aov(pH~Treatment, data = final_df)
 # Code for 2
 summary(pH.aov)
-# Code for 3
+
+```
+
+#### Interpreting ANOVA results
+Using the output from above, answer the questions below to inform your interpretation of this ANOVA, and the experiment details.
+```{r anova-review-quiz}
+quiz(
+    # Question 1
+    question_numeric(
+    "What is the $P$-value associated to the ANOVA? (*NOT the Tukey tests*)<br> *Please round to five decimal places.*",
+    answer(0.000327, message = "Too many digits; five decimal places please."),
+    answer(0.003, message = "One more digit please."),
+    answer(0.00327, message="You dropped a zero...."),
+    answer(0.01859, message = "Not a Tukey adjusted P-value; the ANOVA please."),
+    answer(0.0875, message = "This is not the P-value; it was taken from the wrong column of the ANOVA output table. Look for Pr(>F)."),
+    answer(0.90495, message = "Not a Tukey adjusted P-value; the ANOVA please."),
+    answer(0.00033, correct = TRUE),
+    allow_retry = TRUE,
+    # min = 3,
+    # max = 4,
+    step = 0.00001
+    ),
+    # Question 2
+    question("Based on your $P$-value for the ANOVA, our data ...",
+    answer("provides sufficient evidence to reject the null hypothesis.  We have evidence that the mean pH for all three groups are different from each other.", message="They do not all have to be different."),
+    answer("fails to provide enough evidence to reject the null hypothesis. We *do not* have evidence of any differences in mean pH these groups.", message="Is your $P$-value below 0.05? If so, you should be rejecting the null hypothesis."),
+    answer("provides sufficient evidence to reject the null hypothesis.  We have evidence that the mean pH is different for *at least one* group.", correct = TRUE),
+    answer("fails to provide enough evidence to reject the null hypothesis. We proved the group means are all equal.", message = "Is your $P$-value below 0.05? If so, you should be rejecting the null hypothesis. Also, hypothesis tests do not 'prove' anything; we are always providing evidence or failing to provide evidence."),
+    answer("An ANOVA, analysis of *variance*, tests differences in variance, not means.", message="Not quite. It uses variances to test for differences in means, but it does fundamentally test for differences in means."),
+    allow_retry = T,
+    random_answer_order = T,
+    post_message = random_praise()
+  )
+  
+)
+```
+
+### Tukey HSD and interpretation
+Assume that the ANOVA results have been saved as `pH.aov` (*Note:* the H is capitalized!).
+```{r ph-tukey-setup}
+pH.aov <- aov(pH~Treatment, data = final_df)
+```
+
+```{r ph-tukey, exercise = TRUE, exercise.lines=2, exercise.setup="ph-tukey-setup"}
+# place code here
+```
+```{r ph-tukey-hint-1}
+TukeyHSD(...)
+
+```
+```{r ph-tukey-solution}
 TukeyHSD(pH.aov)
 ```
 
-#### Interpretations and conclusions
-Using the output from above, answer the questions below to inform your interpretation of this ANOVA, and the experiment details.
-```{r review-quiz}
+```{r tukey-review-quiz}
 quiz(
+    
     
     
     
 )
 ```
 
+### Optional: visualizing the differences in means from Tukey
+```{r}
+pH.aov <- aov(pH~Treatment, data = final_df)
+plot(TukeyHSD(pH.aov))
+```
 
-
-### Visualizing the differences in means from Tukey
 
