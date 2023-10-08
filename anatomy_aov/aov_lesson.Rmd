@@ -104,20 +104,22 @@ There is another way to view ANOVA that help makes some of the `R` code more int
 
 * **Independent variable:** this is typically a variable that researchers have some control over, and they let it vary to test for some sort of response in the *dependent variable.*
 
-* **Independent variable:** this is typically a variable that researchers use to measure the response to potential changes in an *independent variable*.  The researchers cannot (and should not) control what this variable is doing!
+* **Dependent variable:** this is typically a variable that researchers use to measure the response to differences in an *independent variable*. The researchers cannot (and should not) control what this variable is doing!
 
 When looking for an association, we are simply asking:
 
-> *Does knowing something about the **independent variable** give us information about what will happen with the **dependent variable**?
+> Does knowing something about the **independent variable** give us information about what will happen with the **dependent variable**? If the answer is *yes*, we consider that an association.
 
 For an ANOVA, we also require (among other assumptions) that:
 
 * the *independent variable* is a categorical (grouping) variable, with at least three potential levels (groups); and
 * the *dependent variable* is a quantitative variable.
 
-So translating the ideas above, an ANOVA attempts to answer the question:
+So translating the ideas above, an ANOVA attempts to answer either of the following questions:
 
 > Does knowing something about a *grouping variable* give us information about a *quantitative measurement*?
+
+> Is there an association between a *grouping variable* and a *quantitative measurement*?
 
 ```{r grouping-question}
 question("In the P. carotovorum experiment, what variable from the data frame do we think of as the researcher controlling and varying for the purpose of looking for some sort of response?",
@@ -164,7 +166,7 @@ Recall that we are only analyzing data from the *end of the experiment.* This me
 * Use the `filter()` command to keep only rows with data from the end of the experiment; and
 * Use the `select()` command to keep the `Treatment`, `Lesion.mm`, and `pH` variables.
 
-Sift through the code to verify that you have the data you need to continue.
+Sift through the output to verify that you have the data you need to continue.
 ```{r filter, exercise = TRUE, exercise.lines=3}
 experiment %>%
     filter(...) %>%
@@ -186,7 +188,7 @@ experiment %>%
     select(Treatment, Lesion.mm, pH)
 ```
 **Answer Check:** There should be 21 rows in this data frame, and three columns.
-<br>
+
 We have stored this data frame under the shortcut name `final_df`. We will use it for the rest of the sections and exercises. For now, we will focus on `Lesion.mm` as our dependent variable and pursue that particular ANOVA. We will not use `pH` until the review exercises.
 
 #### Great work!
