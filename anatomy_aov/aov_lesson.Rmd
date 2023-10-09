@@ -563,4 +563,9 @@ quiz(
 ```
 
 
+### Excellent work!
+Congratulations on working through these exercises on running and interpreting ANOVA results in `R`!
+
+
+
 

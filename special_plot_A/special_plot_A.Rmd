@@ -60,10 +60,16 @@ question("Which variables appear in our data frame? *Select all that apply.*",
 
 
 ```{r why-NA}
-question("In your own words, describe why the `pH` values are `NA` unless our time measurement equals \"72hr\".  Write a sentence before revealing the answer below.<br> *Ready to see an explanation?*",
-answer("Yes.", correct = TRUE),
-post_message = "The pH was not measured until the *end of the experiment*, so only when `Time` equals \"72hr\".  At \"24hr\" or \"48hr\", the measurement value is `NA` to indicate we did not take a measurement at those times."
+
+question_text(
+  "In your own words, describe why the `pH` values are `NA` unless our time measurement equals \"72hr\".  Write a sentence before revealing the answer below.<br></br> *Ready to see an explanation?* (***Note***: all responses are marked as correct, so please compare your answer to ours!) <br></br> Submit your sentence to see an example written by us!",
+  answer_fn(function(value) {
+    if (grepl(".*", value)) {
+      correct("Great work! How does your explanation compare with ours?")
+    }
+  }), message="The pH was not measured until the *end of the experiment*, so only when `Time` equals \"72hr\".  At \"24hr\" or \"48hr\", the measurement value is `NA` to indicate we did not take a measurement at those times."
 )
+
 ```
 
 
