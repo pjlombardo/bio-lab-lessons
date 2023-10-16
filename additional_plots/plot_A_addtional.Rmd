@@ -136,7 +136,6 @@ ggplot(data = experiment72,
 ## Looking at two endpoint metrics at once with `facet_wrap`
 In this
 ```{r message=FALSE}
-# better way to do this?
 measurement_type.labs<-c("Lesion Length (mm)","pH")
 names(measurement_type.labs)<-c("Lesion.mm","pH")
 experiment %>%
@@ -151,16 +150,11 @@ experiment %>%
                y=measurements))+
     geom_boxplot(aes(fill=Treatment),alpha=.3,colour=NA)+
     geom_point(alpha=.3, position=position_jitter(width=.2))+
-    geom_segment(data = experiment %>%
-                    filter(Time=="72hr") %>%
-                    pivot_longer(
-                        cols=c("Lesion.mm","pH"),
-                        names_to="measurement_type",
-                        values_to="measurements"
-                    ) %>%
-                     group_by(measurement_type,Treatment) %>%
-                     summarise(meanMeas = mean(measurements)),
-                 aes(x = rep(c(2,3,1)-.4,2), xend = rep(c(2,3,1)+.4,2), y = meanMeas, yend=meanMeas,color=Treatment))+
+    stat_summary(fun = mean, geom = "errorbar", 
+                 aes(ymax = after_stat(y), 
+                     ymin = after_stat(y),
+                     color=Treatment),
+                 width = .75)+
     facet_grid(rows=vars(measurement_type),
                scales="free_y",
                labeller = labeller(measurement_type=measurement_type.labs))+
