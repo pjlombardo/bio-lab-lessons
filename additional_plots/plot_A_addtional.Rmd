@@ -134,7 +134,7 @@ ggplot(data = experiment72,
 ```
 
 ## Looking at two endpoint metrics at once with `facet_wrap`
-In this
+In this...
 ```{r message=FALSE}
 measurement_type.labs<-c("Lesion Length (mm)","pH")
 names(measurement_type.labs)<-c("Lesion.mm","pH")
