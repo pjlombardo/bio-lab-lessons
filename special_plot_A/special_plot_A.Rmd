@@ -203,6 +203,9 @@ We are almost done preparing our data for the `ggplot()` we are designing. Our l
 * `low`: a value for the lower end of our error-bar, created by taking `average_pH - 2*std.dev_pH`; and
 * `high`: a value for the lower end of our error-bar, created by taking `average_pH + 2*std.dev_pH`
 
+(*Note:* Make a footnote that mean - 2*stdev approximates a 95\% confidence interval well enough in most cases to not make a visual difference to the actual confidence.)
+
+
 #### Exercise: adding `low` and `high` variables to our summary table.
 Fill in the `mutate()` code below, which we added to our work from the previous two sections.
 ```{r mutate, exercise = TRUE, exercise.lines=9}
@@ -382,7 +385,7 @@ ggplot(data = plot_df,
 ### Adding a *fill*-color by Treatment
 Suppose we want some color in the plot; specifically, we would like each treatment group to be a different color.
 
-Since the `fill` color will depend on the `Treatment` variable, this is a new aesthetic! As such, it must appear inside `aes()`. While there are many places we can put this aesthetic,^[We could place `fill=Treatment` in with the `x` and `y` aesthetics in the `ggplot(...)` part of this plot] we will put it inside the `geom_col()` part of the plot.
+Since the `fill` color will depend on the `Treatment` variable, this is a new aesthetic! As such, it must appear inside `aes()`. Since we are coloring the bars, we will place this aesthetic inside the `geom_col()` part of the plot.
 
 ```{r geom-color-bar, exercise = TRUE, exercise.lines=6, exercise.setup="axes-setup"}
 # add the fill aesthetic to the code below
@@ -441,6 +444,8 @@ We want to make two modifications:
 The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involves *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
 
 ### Adding axis labels and a title
+(*Note*: Do not add a title, not done in science.)
+
 Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
 ```{r labels, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
 # add the fill aesthetic to the code below
@@ -517,6 +522,11 @@ ggplot(data = plot_df,
     labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 ```
+
+### Add something how to re-order the levels of the $x$-axis
+using `fct_relevel()`, or using `arrange()`.
+
+
 
 ***
 ***

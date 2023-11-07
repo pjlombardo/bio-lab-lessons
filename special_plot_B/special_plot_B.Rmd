@@ -182,6 +182,8 @@ We are almost done preparing our data for the `ggplot()` we are designing. Our l
 * `low`: a value for the lower end of our error-bar, created by taking `average.Lesion.mm - 2*stddev.Lesion.mm`; and
 * `high`: a value for the lower end of our error-bar, created by taking `average.Lesion.mm - 2*stddev.Lesion.mm`
 
+(*Note:* Make a footnote that mean - 2*stdev approximates a 95\% confidence interval well enough in most cases to not make a visual difference to the actual confidence.)
+
 #### Exercise: adding `low` and `high` variables to our summary table.
 Fill in the `mutate()` code below, which we added to our work from the previous two sections.
 ```{r mutate, exercise = TRUE, exercise.lines=7, message=FALSE}
@@ -454,6 +456,7 @@ We want to make a few modifications:
 The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second requires adjusting the `alpha` value inside the error-bar geometry. The third we can accomplish very quickly by adding a "theme".
 
 ### Adding axis labels and a title
+(*Note*: Do not add a title, not done in science.)
 Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
 ```{r labels, exercise = TRUE, exercise.lines=10, exercise.setup="axes-setup"}
 # add labs() below to change the axis labels
