@@ -42,11 +42,18 @@ At 24, 48, and 72 hours, disease progression was monitored as the length of the 
 
 
 ### Exploring the data
+
+(*Note:* provide a link to a google sheet of the data, and then have them look in R.)
+
+(*Note*: Show code for loading a spreadsheet (probably excel downloaded from google sheets, but give all options.))
+
 Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower left to see more rows of the data.
 ```{r p-value, exercise = TRUE, exercise.lines=3}
 experiment
 ```
 *Note:* The data is in "tidy" format already. This means that each row corresponds to a measurement taken on a given leave at a particular time point (24hr, 48hr, or 72hr).  Each endpoint metric, as well as a time and treatment labels, are stored in their own columns.^[Also note that `pH` has `NA` values whenever `Time` is not equal to 72 hours; this is because we do not measure pH until the end of the experiment.]
+
+(*Note*:  Something on `NA` either as empty cell in excel or NA in csv. Make a note that you don't need to type NA in the excel or csv, just leave a blank cell.)
 
 > Important Idea: In order for the ANOVA code in this lesson to work properly, the data *must* be in tidy format!
 
@@ -100,7 +107,12 @@ As with all hypothesis tests, we either conclude by
 * **failing to reject $H_0$**: this means our samples did not provide enough evidence to suggest that the group means are different at the population level.
 
 ### A new perspective
+
+(*Note:* Drop the language of "association" and just review indpendent/dependent variables.)
+
 There is another way to view ANOVA that help makes some of the `R` code more intuitive. ANOVA is a test that, like others, provides a method of testing for an ***association*** between an *independent variable* and a *dependent variable*.  Roughly speaking:
+
+(*Note:* Add parentheticals to use explanatory/response variable in the definitions below.)
 
 * **Independent variable:** this is typically a variable that researchers have some control over, and they let it vary to test for some sort of response in the *dependent variable.*
 
@@ -165,6 +177,8 @@ Recall that we are only analyzing data from the *end of the experiment.* This me
 
 * Use the `filter()` command to keep only rows with data from the end of the experiment; and
 * Use the `select()` command to keep the `Treatment`, `Lesion.mm`, and `pH` variables.
+* *Note*: put in a reminder that the comparison is case sensitive, and needs to perfectly match what's in the data frame.  Also, why do we need quotes for some, but not others (measurements/levels need quotes, but variables do not.)
+* *Note:* Maybe keep `Time` variable so they can verify that they have the right data.
 
 Sift through the output to verify that you have the data you need to continue.
 ```{r filter, exercise = TRUE, exercise.lines=3}
