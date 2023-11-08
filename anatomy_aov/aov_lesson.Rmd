@@ -12,11 +12,14 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 knitr::opts_chunk$set(echo = FALSE)
-experiment <- read.csv('data/experiment_data.csv', header = T)
+experiment <- read.csv('data/experiment_data.csv', 
+                       header = T,
+                       na.strings = "NA")
 final_df<-experiment %>%
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     select(Treatment,Lesion.mm,pH)
 ```
+
 
 ## Understanding the experiment
 In this lesson, we will learn how to use Analysis of Variance (ANOVA) to test for statistically significant differences in means for three treatment groups. The data, and the description below, were generously provided by Dr. Grace Kwan.
@@ -36,22 +39,20 @@ The experiment monitored several lettuce leaves within each treatment class:
 * Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
 * Nine leaves inoculated with $\Delta$budB mutant (`budB`).
 
-At 24, 48, and 72 hours, disease progression was monitored as the length of the soft rot area in millimeters (`Lesion.mm`). At 72 hours, the soft rotted tissue was mashed up to evaluate the pH. 
+At 20, 50, and 100 hours, disease progression was monitored as the length of the soft rot area in millimeters (`Lesion.mm`). At 100 hours, the soft rotted tissue was mashed up to evaluate the pH. 
 
 ***We are primarily interested in differences in lesion length and pH between the treatment groups at the end of the experiment.***
 
 
 ### Exploring the data
 
-(*Note:* provide a link to a google sheet of the data, and then have them look in R.)
-
-(*Note*: Show code for loading a spreadsheet (probably excel downloaded from google sheets, but give all options.))
+<a href="https://docs.google.com/spreadsheets/d/14SjsEqxfG1aucubCJkq41gMLh47XJ5b2R1J0PMAkar4/edit?usp=sharing" target="_blank">Google Sheet of Experiment Data</a>
 
 Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower left to see more rows of the data.
 ```{r p-value, exercise = TRUE, exercise.lines=3}
 experiment
 ```
-*Note:* The data is in "tidy" format already. This means that each row corresponds to a measurement taken on a given leave at a particular time point (24hr, 48hr, or 72hr).  Each endpoint metric, as well as a time and treatment labels, are stored in their own columns.^[Also note that `pH` has `NA` values whenever `Time` is not equal to 72 hours; this is because we do not measure pH until the end of the experiment.]
+*Note:* The data is in "tidy" format already. This means that each row corresponds to a measurement taken on a given leave at a particular time point (20hr, 50hr, or 100hr).  Each endpoint metric, as well as a time and treatment labels, are stored in their own columns.^[Also note that `pH` has `NA` values whenever `TimeGroup` is not equal to 100 hours; this is because we do not measure pH until the end of the experiment.]
 
 (*Note*:  Something on `NA` either as empty cell in excel or NA in csv. Make a note that you don't need to type NA in the excel or csv, just leave a blank cell.)
 
@@ -63,7 +64,7 @@ question("Read the description of the \"Experiment Details\" once more. Of the v
     answer("Leaf_ID"),
     answer("pH", correct = TRUE),
     answer("Treatment"),
-    answer("Time"),
+    answer("TimeGroup"),
     answer("Lesion.mm",correct = TRUE),
     answer("Sample"),
     allow_retry = T,
@@ -78,7 +79,7 @@ question("Which variable in the data frame identifies the groups we want to comp
     answer("Leaf_ID"),
     answer("pH"),
     answer("Treatment", correct = TRUE),
-    answer("Time"),
+    answer("TimeGroup"),
     answer("Lesion.mm"),
     answer("Sample"),
     allow_retry = T,
@@ -173,12 +174,12 @@ Many `R` functions, and statistical analyses, require the researcher to specify 
 So, for our case, we will often see code that uses `Lesion.mm ~ Treatment`.
 
 ### Preparing our analysis data frame
-Recall that we are only analyzing data from the *end of the experiment.* This means we want rows where `Time` equals (`==`) the "72hr" mark.  Use the code chunk below to do the following:
+Recall that we are only analyzing data from the *end of the experiment.* This means we want rows where `TimeGroup` equals (`==`) the "100hr" mark.  Use the code chunk below to do the following:
 
 * Use the `filter()` command to keep only rows with data from the end of the experiment; and
 * Use the `select()` command to keep the `Treatment`, `Lesion.mm`, and `pH` variables.
 * *Note*: put in a reminder that the comparison is case sensitive, and needs to perfectly match what's in the data frame.  Also, why do we need quotes for some, but not others (measurements/levels need quotes, but variables do not.)
-* *Note:* Maybe keep `Time` variable so they can verify that they have the right data.
+* *Note:* Maybe keep `TimeGroup` variable so they can verify that they have the right data.
 
 Sift through the output to verify that you have the data you need to continue.
 ```{r filter, exercise = TRUE, exercise.lines=3}
@@ -193,12 +194,12 @@ experiment %>%
 ```
 ```{r filter-hint-2}
 experiment %>%
-    filter(Time == "...") %>%
+    filter(TimeGroup == "...") %>%
     select(Treatment, Lesion.mm, pH)
 ```
 ```{r filter-solution}
 experiment %>%
-    filter(Time == "72hr") %>%
+    filter(TimeGroup == "100hr") %>%
     select(Treatment, Lesion.mm, pH)
 ```
 **Answer Check:** There should be 21 rows in this data frame, and three columns.
@@ -213,7 +214,7 @@ Here we go!
 ## Running an ANOVA {data-progressive=TRUE}
 ```{r aov-setup, include = FALSE}
 experiment %>%
-    filter(Time == "72hr") %>%
+    filter(TimeGroup == "100hr") %>%
     select(Treatment, Lesion.mm, pH)->final_df
 lesion.aov<-aov(Lesion.mm ~ Treatment, data = final_df)
 ```
@@ -300,7 +301,7 @@ So far we have
 
 In the context of our data, this means that our experiment suggests the following:
 
-> At the population level (so extending beyond just the data we collected), *at least one* treatment group will have a different mean lesion length after 72 hours than the others.
+> At the population level (so extending beyond just the data we collected), *at least one* treatment group will have a different mean lesion length after 100 hours than the others.
 
 Great! But... 
 
@@ -318,7 +319,7 @@ One more section; let's keep learning!
 **Optional note on "*population level*"**<br>
 It's a little odd to use the language of "population level mean" for experiments like this.  One way to interpret this is in terms of *reproducibility*, which scientists seem to like. Recall our conclusion:
 
-*At the **population level** (so extending beyond just the data we collected), at least one treatment group will have a different mean lesion length after 72 hours than the others.*
+*At the **population level** (so extending beyond just the data we collected), at least one treatment group will have a different mean lesion length after 100 hours than the others.*
 
 We are simply implying that this particular experiment, combined with the ANOVA results, suggests that if we were to run the experiment several more times (*reproduce it*), we would expect to see similar results of at least one group mean being different.
 
