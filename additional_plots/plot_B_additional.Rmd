@@ -108,17 +108,19 @@ ggplot(data = plot_df,
 experiment %>%
     mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
 ggplot(data = .,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = Lesion.mm,
-           fill=Treatment))+
+           group=as.factor(TimeValue)))+
     # geom_violin()+
-    geom_boxplot()+
+    geom_boxplot(aes(fill=Treatment))+
+    scale_x_continuous(breaks=c(20,50,100))+
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   # alpha = .5)+
     facet_grid(cols=vars(Treatment))+
     theme_bw()+
     labs(y="Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         x="Time (hrs)",
+         title = "Separate boxplots by Treatment, with time progression\ninside each subplot")
 ```
 
 
@@ -129,18 +131,19 @@ ggplot(data = .,
 experiment %>%
     mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
 ggplot(data = .,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = Lesion.mm,
            fill=Treatment))+
     # geom_violin()+
-    geom_boxplot(color='gray1',alpha=.3)+
+    geom_boxplot(aes(group=as.factor(TimeValue)),
+                     color='gray1',alpha=.3)+
     geom_point(aes(color=Treatment),pch=21,
-               position=position_jitter(width=.1))+
+               position=position_jitter(width=3))+
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   # alpha = .5)+
     facet_grid(cols=vars(Treatment))+
     theme_bw()+
     labs(y="Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         title = "Boxplots with data overlayed")
 ```
 

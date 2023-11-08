@@ -622,7 +622,7 @@ p2<-ggplot(data = plot_df,
            color = Treatment,
            group = Treatment))+
     geom_point(position=position_dodge(width=3)) + geom_line(position=position_dodge(width=3))+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+    geom_errorbar(aes(ymin=low, ymax =high), width = 2,
                   alpha = .5, position=position_dodge(width=3))+
     theme_classic()+
     labs(y="Average Lesion Length (mm)",
@@ -665,14 +665,16 @@ p5<-experiment %>%
 ggplot(data = .,
        aes(x = TimeValue,
            y = Lesion.mm,
-           fill=Treatment))+
+           group=as.factor(TimeValue)))+
     # geom_violin()+
-    geom_boxplot()+
+    geom_boxplot(aes(fill=Treatment))+
+    scale_x_continuous(breaks=c(20,50,100))+
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   # alpha = .5)+
     facet_grid(cols=vars(Treatment))+
     theme_bw()+
     labs(y="Lesion Length (mm)",
+         x="Time (hrs)",
          title = "Separate boxplots by Treatment, with time progression\ninside each subplot")
 
 p6<-experiment %>%
@@ -682,9 +684,12 @@ ggplot(data = .,
            y = Lesion.mm,
            fill=Treatment))+
     # geom_violin()+
-    geom_boxplot(color='gray1',alpha=.3)+
+    # Come back and fix
+    geom_boxplot(aes(group=as.factor(TimeValue)),
+                     color='gray1',alpha=.3,
+                 outlier.shape=NA)+
     geom_point(aes(color=Treatment),pch=21,
-               position=position_jitter(width=.1))+
+               position=position_jitter(width=3))+
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   # alpha = .5)+
     facet_grid(cols=vars(Treatment))+
