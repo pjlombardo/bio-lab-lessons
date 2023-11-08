@@ -34,7 +34,7 @@ The experiment monitored several lettuce leaves within each treatment class:
 * Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
 * Nine leaves inoculated with $\Delta$budB mutant (`budB`).
 
-At 24, 48, and 72 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 72 hrs, the soft rotted tissue was mashed up to evaluate the pH.
+At 20, 50, and 100 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 100 hrs, the soft rotted tissue was mashed up to evaluate the pH.
 
 
 ### Exploring the data
@@ -48,7 +48,7 @@ question("Which variables appear in our data frame? *Select all that apply.*",
     answer("Leaf_ID"),
     answer("pH", correct = TRUE),
     answer("Treatment", correct = TRUE),
-    answer("Time", correct = TRUE),
+    answer("TimeGroup", correct = TRUE),
     answer("Length_lesion"),
     answer("Final_pH"),
     allow_retry = T,
@@ -62,12 +62,12 @@ question("Which variables appear in our data frame? *Select all that apply.*",
 ```{r why-NA}
 
 question_text(
-  "In your own words, describe why the `pH` values are `NA` unless our time measurement equals \"72hr\".  Write a sentence before revealing the answer below.<br></br> *Ready to see an explanation?* (***Note***: all responses are marked as correct, so please compare your answer to ours!) <br></br> Submit your sentence to see an example written by us!",
+  "In your own words, describe why the `pH` values are `NA` unless our time measurement equals \"100hr\".  Write a sentence before revealing the answer below.<br></br> *Ready to see an explanation?* (***Note***: all responses are marked as correct, so please compare your answer to ours!) <br></br> Submit your sentence to see an example written by us!",
   answer_fn(function(value) {
     if (grepl(".*", value)) {
       correct("Great work! How does your explanation compare with ours?")
     }
-  }), message="The pH was not measured until the *end of the experiment*, so only when `Time` equals \"72hr\".  At \"24hr\" or \"48hr\", the measurement value is `NA` to indicate we did not take a measurement at those times."
+  }), message="The pH was not measured until the *end of the experiment*, so only when `TimeGroup` equals \"100hr\".  At \"20hr\" or \"50hr\", the measurement value is `NA` to indicate we did not take a measurement at those times."
 )
 
 ```
@@ -133,27 +133,27 @@ Ready to get plotting?
 ## Preparing a plotting data frame {data-progressive=TRUE}
 Having surveyed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
 
-1. Since we are dealing with `pH`, which was only measured at the end of the experiment, we need to `filter()` to only keep rows where `Time` equals "72hr".
+1. Since we are dealing with `pH`, which was only measured at the end of the experiment, we need to `filter()` to only keep rows where `TimeGroup` equals "100hr".
 2. Because of our axis aesthetics, we need to `group_by()` the `Treatment` variable, and `summarize()` to get the mean `pH` for each group.
 3. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev.
 
 ### Step 1: filtering
-Recall that we only want rows where `Time` equals (`==`) the "72hr" mark.  Use the code chunk below, with the `filter` command, to do this and check your work by sifting through the data frame.
+Recall that we only want rows where `TimeGroup` equals (`==`) the "100hr" mark.  Use the code chunk below, with the `filter` command, to do this and check your work by sifting through the data frame.
 ```{r filter, exercise = TRUE, exercise.lines=3}
 experiment %>%
     filter(...)
 ```
 ```{r filter-hint-1}
 experiment %>%
-    filter(Time ...)
+    filter(TimeGroup ...)
 ```
 ```{r filter-hint-2}
 experiment %>%
-    filter(Time == "...")
+    filter(TimeGroup == "...")
 ```
 ```{r filter-solution}
 experiment %>%
-    filter(Time == "72hr")
+    filter(TimeGroup == "100hr")
 ```
 
 
@@ -170,19 +170,19 @@ Build on the `dplyr` pipe that filters the data frame. Add the appropriate `grou
 
 ```{r group-by, exercise = TRUE, exercise.lines=6}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(...) %>%
     summarize(...)
 ```
 ```{r group-by-hint-1}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(...)
 ```
 ```{r group-by-hint-2}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = ..., # write your computation
             std.dev_pH = ...   # write your computation
@@ -190,7 +190,7 @@ experiment %>%
 ```
 ```{r group-by-solution}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH), # write your computation
             std.dev_pH = sd(pH)   # write your computation
@@ -210,7 +210,7 @@ We are almost done preparing our data for the `ggplot()` we are designing. Our l
 Fill in the `mutate()` code below, which we added to our work from the previous two sections.
 ```{r mutate, exercise = TRUE, exercise.lines=9}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -218,7 +218,7 @@ experiment %>%
 ```
 ```{r mutate-hint-1}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -227,7 +227,7 @@ experiment %>%
 ```
 ```{r mutate-hint-2}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -236,7 +236,7 @@ experiment %>%
 ```
 ```{r mutate-solution}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -258,7 +258,7 @@ Onward!
 Before continuing, it helps to save the summary data frame we created for plotting purposes.  The code below accomplishes this by adding a `-> plot_df` to the last line of the code. This essentially saves our work under the name `plot_df`, so that we can reference it later.
 ```
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -281,7 +281,7 @@ where
 Complete the code below to link our plot to `plot_df`, and set the `x` and `y` aesthetics.  Remember we want the treatment group on the $x$-axis and the average pH on the $y$-axis.
 ```{r axes-setup, include = FALSE}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -421,7 +421,7 @@ Ready to wrap it up?
 Here is our plot so far
 ```{r fig.align='center',fig.width=5,fig.height=2.5}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -438,7 +438,7 @@ We want to make two modifications:
 
 1. We want better axis labels and a title; specifically, we want 
     * the $y$-axis to be "Average pH" and 
-    * a title of "Leaf pH at 72 hours by Treatment."
+    * a title of "Leaf pH at 100 hours by Treatment."
 2. We want the $y$-axis to have markings for every unit of pH (i.e., it should be labeled 0, 1, 2, ...7).
 
 The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involves *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
@@ -470,7 +470,7 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes( fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")
+    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")
 ```
 
 ### Scaling the $y$-axis
@@ -493,7 +493,7 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes( fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")
+    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")
 ```
 ```{r scale-y-hint-1}
 ggplot(data = plot_df,
@@ -501,7 +501,7 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes(fill= fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
     scale_y_continuous(breaks = ...)
 ```
 ```{r scale-y-hint-2}
@@ -510,7 +510,7 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes(fill= fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
     scale_y_continuous(breaks = seq(...))
 ```
 ```{r scale-y-solution}
@@ -519,7 +519,7 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes(fill=Treatment))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 ```
 
@@ -568,9 +568,9 @@ plotOutput("distPlot")
 ```{r, context="server"}
 # preparing the plot data frame
 experiment %>% 
-    filter(Time=="72hr")->exp2
+    filter(TimeGroup=="100hr")->exp2
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -582,13 +582,13 @@ g1<-ggplot(data = plot_df,
        aes(x = Treatment, y = average_pH))+
     geom_col(aes(fill = Treatment))+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 g2<-ggplot(data = plot_df,     
        aes(x = Treatment, y = average_pH))+
     geom_col(aes(fill = Treatment),alpha = .6)+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 
 p1<-g1 + scale_fill_brewer(palette="Accent")+theme_bw()+labs(title="Adjust color schemes with `brewer`")
@@ -613,7 +613,7 @@ p4<-ggplot(data = plot_df,
 measurement_type.labs<-c("Lesion Length (mm)","pH")
 names(measurement_type.labs)<-c("Lesion.mm","pH")
 experiment %>%
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     pivot_longer(
         cols=c("Lesion.mm","pH"),
         names_to="measurement_type",
@@ -625,7 +625,7 @@ experiment %>%
     geom_boxplot(aes(fill=Treatment),alpha=.3,colour=NA)+
     geom_point(alpha=.3, position=position_jitter(width=.2))+
     geom_segment(data = experiment %>%
-                    filter(Time=="72hr") %>%
+                    filter(TimeGroup=="100hr") %>%
                     pivot_longer(
                         cols=c("Lesion.mm","pH"),
                         names_to="measurement_type",
@@ -668,7 +668,7 @@ Links to related exercises and resources.
 # preparing the plot data frame
 experiment %>% 
     # keep only rows at the final time point (i.e., the end)
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     
     # We want summaries for each treatment group, so we
     # group by Treatment
@@ -703,7 +703,7 @@ ggplot(data = plot_df,      # link to our plotting data
     
     # add y-axis label and title
     
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
     
     # use breaks to define how we want to label the markings
     # on the y-axis
