@@ -20,6 +20,15 @@ final_df<-experiment %>%
     select(Treatment,Lesion.mm,pH)
 ```
 
+```{css, echo=FALSE}
+details summary { 
+  cursor: pointer;
+  color: rgb(154, 7, 7);
+  font-size: 18px;
+  font-style: italic;
+  font-family: Georgia;
+}
+```
 
 ## Understanding the experiment
 In this lesson, we will learn how to use Analysis of Variance (ANOVA) to test for statistically significant differences in means for three treatment groups. The data, and the description below, were generously provided by Dr. Grace Kwan.
@@ -45,10 +54,44 @@ At 20, 50, and 100 hours, disease progression was monitored as the length of the
 
 
 ### Exploring the data
+Recall from our video (INSERT LINK TO VIDEO!!!!) that our experiment data has been put in tidy format. Here is a link to a google sheet with the data for you to refresh your memory: <a href="https://docs.google.com/spreadsheets/d/14SjsEqxfG1aucubCJkq41gMLh47XJ5b2R1J0PMAkar4/edit?usp=sharing" target="_blank">Google Sheet of Experiment Data.</a> Recall there are two sheets:
 
-<a href="https://docs.google.com/spreadsheets/d/14SjsEqxfG1aucubCJkq41gMLh47XJ5b2R1J0PMAkar4/edit?usp=sharing" target="_blank">Google Sheet of Experiment Data</a>
+* **tidy**: This sheet has our data in its tidy format
+* **original**: This sheet has our data in its original format.
 
-Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower left to see more rows of the data.
+We have loaded *the tidy version* of our data into R under the data frame name `experiment`.
+
+***
+
+<details>
+<summary> $\blacktriangleright$ Review Code for Loading Data...</summary>
+The code for loading data into `R` depends on the format of the file (`.xslx`, `.csv`, `.tsv`, et cetera).  For those interested, here is code for loading our experiment data in CSV and Excel formats
+```
+# CSV format
+experiment <- read.csv("location/file.csv", 
+                        header = T)
+# Example:
+experiment <- read.csv("data/experiment.csv",
+                        header = T)
+
+# Excel
+library(readxl)
+experiment <- read_excel("location/file.xlsx",
+                        sheet="sheet_name")
+# Example:
+experiment <- read_excel("data/experiment.xlsx",
+                        sheet="tidy")
+```
+When in doubt, you can always use the "Import Dataset" button in the upper-right Environment Tab of R Studio:
+<center><img src="images/import.png" 
+     width="375" 
+     height="120"/></center>
+</details>
+
+***
+
+
+Run the code block below to view the data and its format in `R`.  Remember you can use "Next" button in the lower left to see more rows of the data.
 ```{r p-value, exercise = TRUE, exercise.lines=3}
 experiment
 ```

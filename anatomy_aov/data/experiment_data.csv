@@ -1,4 +1,4 @@
-Sample,Treatment,TimeGroup,TimeValue.hr,pH,Lesion.mm
+Sample,Treatment,TimeGroup,TimeValue,pH,Lesion.mm
 WT 1,Wild,20hr,20,NA,2
 WT 2,Wild,20hr,20,NA,2
 WT 3,Wild,20hr,20,NA,4
