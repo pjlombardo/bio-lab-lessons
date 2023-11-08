@@ -95,9 +95,15 @@ Run the code block below to view the data and its format in `R`.  Remember you c
 ```{r p-value, exercise = TRUE, exercise.lines=3}
 experiment
 ```
-*Note:* The data is in "tidy" format already. This means that each row corresponds to a measurement taken on a given leave at a particular time point (20hr, 50hr, or 100hr).  Each endpoint metric, as well as a time and treatment labels, are stored in their own columns.^[Also note that `pH` has `NA` values whenever `TimeGroup` is not equal to 100 hours; this is because we do not measure pH until the end of the experiment.]
 
-(*Note*:  Something on `NA` either as empty cell in excel or NA in csv. Make a note that you don't need to type NA in the excel or csv, just leave a blank cell.)
+Notice that
+
+* The data is in "tidy" format already. 
+    * Each row corresponds to a measurement taken on a given leaf at a particular time point (20hr, 50hr, or 100hr).
+    * Each endpoint metric, as well as the time variables (`TimeGroup` and `TimeValue`) and treatment labels, are stored in their own columns.
+* Each endpoint metric, for example `pH`, has `NA` values whenever `TimeGroup` is not equal to 100 hours; this is because we do not measure pH until the end of the experiment.
+    * In our <a href="https://docs.google.com/spreadsheets/d/14SjsEqxfG1aucubCJkq41gMLh47XJ5b2R1J0PMAkar4/edit?usp=sharing" target="_blank">google sheet</a>, we placed `NA` in these cells, but we could also have just left them blank.
+
 
 > Important Idea: In order for the ANOVA code in this lesson to work properly, the data *must* be in tidy format!
 
@@ -122,7 +128,7 @@ question("Which variable in the data frame identifies the groups we want to comp
     answer("Leaf_ID"),
     answer("pH"),
     answer("Treatment", correct = TRUE),
-    answer("TimeGroup"),
+    answer("TimeValue"),
     answer("Lesion.mm"),
     answer("Sample"),
     allow_retry = T,
