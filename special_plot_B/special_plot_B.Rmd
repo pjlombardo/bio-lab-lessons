@@ -34,7 +34,7 @@ The experiment monitored several lettuce leaves within each treatment class:
 * Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
 * Nine leaves inoculated with $\Delta$budB mutant (`budB`).
 
-At 24, 48, and 72 hours, disease progression was monitored as the length of the soft rot area in millimeters (`Lesion.mm`).
+At 20, 50, and 100 hours, disease progression was monitored as the length of the soft rot area in millimeters (`Lesion.mm`).
 
 ### Exploring the data
 Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower left to see more rows of the data.
@@ -47,7 +47,7 @@ question("We are primarily interested in how the length of the soft rot area cha
     answer("Leaf_ID"),
     answer("pH"),
     answer("Treatment", correct = TRUE),
-    answer("Time", correct = TRUE),
+    answer("TimeValue", correct = TRUE),
     answer("Lesion.mm",correct = TRUE),
     answer("Sample"),
     allow_retry = T,
@@ -123,13 +123,13 @@ Let's go!
 Having understood and processed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
 
 1. Because of our $y$-axis aesthetic, which is an average, we will need to `group_by()` the `Treatment` variable, and `summarize()` to get the mean `Lesion.mm` for each group.
-2. Because our $x$-axis aesthetic involves multiple time points, we will actually need the summaries described in (1) above *for each time point*: 24, 48, and 72 hours.  We can accomplish this by adding `Time` to the `group_by()` function.
+2. Because our $x$-axis aesthetic involves multiple time points, we will actually need the summaries described in (1) above *for each time point*: 20, 50, and 100 hours.  We can accomplish this by adding `TimeValue` to the `group_by()` function.
 3. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev. These variables will need to have this information for each group at each time point.
 
 With this in mind, our plotting data frame should have four variables:
 
 * `Treatment`: indicating the treatment group for that row
-* `Time`: indicating the time point for that row
+* `TimeValue`: indicating the time point for that row
 
 (*Note:* there will be enough rows to cover each treatment group at each of the time points)
 
@@ -139,9 +139,9 @@ With this in mind, our plotting data frame should have four variables:
 * `high`: the upper limit of a confidence interval (`mean + 2*std.dev`), which we will use for the end of our error bars; again, this is associated to a specific group at a specific time.
 
 ### Step 1: grouping and summarizing
-We can begin creating the summary data we need to for our plot.  Since we want to compute summaries for each `Treatment` group at each `Time`, we need to
+We can begin creating the summary data we need to for our plot.  Since we want to compute summaries for each `Treatment` group at each `TimeValue`, we need to
 
-1. Take our data frame and `group_by()` the `Treatment` and `Time` variables, then
+1. Take our data frame and `group_by()` the `Treatment` and `TimeValue` variables, then
 2. `summarize()` the appropriate variable (`Lesion.mm`) using `R` functions.
 
 In particular, we will need the `mean()` function and the `sd()` function to compute the mean and standard deviation of the `Lesion.mm` variable.
@@ -161,14 +161,14 @@ experiment %>%
 ```
 ```{r group-by-hint-2}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = ..., # write your computation
             stddev.Lesion.mm = ...   # write your computation
              )
 ```
 ```{r group-by-solution}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)
              )
@@ -188,14 +188,14 @@ We are almost done preparing our data for the `ggplot()` we are designing. Our l
 Fill in the `mutate()` code below, which we added to our work from the previous two sections.
 ```{r mutate, exercise = TRUE, exercise.lines=7, message=FALSE}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(...)
 ```
 ```{r mutate-hint-1}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(low = ...,
@@ -203,7 +203,7 @@ experiment %>%
 ```
 ```{r mutate-hint-2}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
@@ -211,7 +211,7 @@ experiment %>%
 ```
 ```{r mutate-solution}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
@@ -227,7 +227,7 @@ Onward!
 Before continuing, it helps to save the summary data frame we created for plotting purposes.  The code below accomplishes this by adding a `-> plot_df` to the last line of the code. This essentially saves our work under the name `plot_df`, so that we can reference it later.
 ```
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
@@ -249,7 +249,7 @@ where
 Complete the code below to link our plot to `plot_df`, and set the `x`, `y`, and `color` aesthetics.  Remember we want the times on the $x$-axis, and the *average* lesion length on the $y$-axis, and the color should depend on the treatment group.
 ```{r axes-setup, include = FALSE}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
@@ -270,13 +270,13 @@ ggplot(data = plot_df,
 ```
 ```{r axes-hint-2}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = ...))
 ```
 ```{r axes-solution}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment))
 ```
@@ -291,13 +291,13 @@ In this case, we will use `geom_point()` and `geom_line()` as our geometries. Ad
 ```{r geoms, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
 # add the geometry to the code below
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment))
 ```
 ```{r geoms-hint-1}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment)) +
     geom_... +
@@ -305,7 +305,7 @@ ggplot(data = plot_df,
 ```
 ```{r geoms-hint-2}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment)) +
     geom_point() +
@@ -313,7 +313,7 @@ ggplot(data = plot_df,
 ```
 ```{r geoms-solution}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment)) +
     geom_point()+
@@ -339,7 +339,7 @@ Add the group aesthetic to the code below, and see how it fixes our plot! Rememb
 ```{r geoms-fixed, exercise = TRUE, exercise.lines=9, exercise.setup="axes-setup"}
 # add the group aesthetic to the code below
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = ...))+
@@ -348,7 +348,7 @@ ggplot(data = plot_df,
 ```
 ```{r geoms-fixed-solution}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -378,7 +378,7 @@ This should add nice-looking error bars to our plot.
 ```{r error-bars, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
 # add the errobar geometry and the aesthetics
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -386,7 +386,7 @@ ggplot(data = plot_df,
 ```
 ```{r error-bars-hint-1}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -395,7 +395,7 @@ ggplot(data = plot_df,
 ```
 ```{r error-bars-hint-2}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -404,7 +404,7 @@ ggplot(data = plot_df,
 ```
 ```{r error-bars-solution}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -428,14 +428,14 @@ Ready to wrap it up?
 Here is our plot so far:
 ```{r fig.align='center',fig.width=5,fig.height=3.5, message = FALSE}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
            high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
 
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -461,7 +461,7 @@ Let's take care of our labels and title first. Run the code below to see what it
 ```{r labels, exercise = TRUE, exercise.lines=10, exercise.setup="axes-setup"}
 # add labs() below to change the axis labels
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -470,7 +470,7 @@ ggplot(data = plot_df,
 ```
 ```{r labels-hint-1}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -481,7 +481,7 @@ ggplot(data = plot_df,
 ```
 ```{r labels-solution}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -500,7 +500,7 @@ To help us see the error-bar overlaps, let's make the transparency about 0.5. Se
 ```{r scale-y, exercise = TRUE, exercise.lines=11, exercise.setup="axes-setup"}
 # add the fill aesthetic to the code below
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -512,7 +512,7 @@ ggplot(data = plot_df,
 ```
 ```{r scale-y-hint-1}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -525,7 +525,7 @@ ggplot(data = plot_df,
 ```
 ```{r scale-y-solution}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -584,14 +584,14 @@ plotOutput("distPlot")
 ```{r message = FALSE, context="server"}
 # preparing the plot data frame
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
            high = average.Lesion.mm + 2*stddev.Lesion.mm) -> plot_df
            
 p1<-ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -604,7 +604,7 @@ p1<-ggplot(data = plot_df,
 
 
 p3<-ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -617,19 +617,19 @@ p3<-ggplot(data = plot_df,
 
 
 p2<-ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
-    geom_point(position=position_dodge(width=.095)) + geom_line(position=position_dodge(width=.095))+
+    geom_point(position=position_dodge(width=3)) + geom_line(position=position_dodge(width=3))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
-                  alpha = .5, position=position_dodge())+
+                  alpha = .5, position=position_dodge(width=3))+
     theme_classic()+
     labs(y="Average Lesion Length (mm)",
          title = "Point, line, and error-bars \"dodged\" to avoid overlap")
 
 p4<-ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -637,7 +637,7 @@ p4<-ggplot(data = plot_df,
                alpha=.8) + 
     geom_line()+
     geom_point(data = experiment,
-               aes(x = Time, y = Lesion.mm,
+               aes(x = TimeValue, y = Lesion.mm,
                    color=Treatment),
                pch = 19,alpha=.6,size=1,
                position=position_jitter(width=.05))+
@@ -649,7 +649,7 @@ p4<-ggplot(data = plot_df,
 
 # # Work on it
 # ggplot(data = experiment,
-#        aes(x = Time,
+#        aes(x = TimeValue,
 #            y = Lesion.mm,
 #            fill = Treatment))+
 #     # geom_violin()+
@@ -658,12 +658,12 @@ p4<-ggplot(data = plot_df,
 #                   # alpha = .5)+
 #     theme_bw()+
 #     labs(y="Average Lesion Length (mm)",
-#          title = "Rot lesion length as a function of time for three treatment groups")
+#          title = "Rot lesion length as a function of TimeValue for three treatment groups")
 library(forcats)
 p5<-experiment %>%
     mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
 ggplot(data = .,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = Lesion.mm,
            fill=Treatment))+
     # geom_violin()+
@@ -678,7 +678,7 @@ ggplot(data = .,
 p6<-experiment %>%
     mutate(Treatment = fct_relevel(Treatment,"Control","budB")) %>%
 ggplot(data = .,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = Lesion.mm,
            fill=Treatment))+
     # geom_violin()+
@@ -721,7 +721,7 @@ experiment %>%
     # We need to group the data by Treatment AND Time,
     # Sinc we want to compare treatment groups at all
     # the time points
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     
     # We create summaries, average and std deviation,
     # for our dependent variable Lesion.mm
@@ -736,8 +736,8 @@ experiment %>%
 
 #Let's begin our plot.
 ggplot(data = plot_df,      # link to the data frame plot_df
-       # We want Time on the x axis, average lesion length on the y.
-       aes(x = Time,
+       # We want TimeValue on the x axis, average lesion length on the y.
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            # The color aesthetic is for the point geometry,
            # each treatment group gets a unique color
