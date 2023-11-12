@@ -573,10 +573,9 @@ There is always more than one way to visualize data. Here are a few other option
 radioButtons("plot_nm","Choose a plot!",
              c("Original Plot" = "p1",
                  "Plot 1" = "p2",
-                 "Plot 2" = "p3",
-                 "Plot 3" = "p4",
-               "Plot 4" = "p5",
-               "Plot 5" = "p6"),
+                 "Plot 2" = "p4",
+                 "Plot 3" = "p5",
+               "Plot 4" = "p6"),
              inline=TRUE)
 plotOutput("distPlot")
 ```
@@ -603,17 +602,18 @@ p1<-ggplot(data = plot_df,
          title = "Rot lesion length as a function of time for three treatment groups")
 
 
-p3<-ggplot(data = plot_df,
-       aes(x = TimeValue,
-           y = average.Lesion.mm,
-           color = Treatment,
-           group = Treatment))+
-    geom_point() + geom_line()+
-    geom_ribbon(aes(ymin=low, ymax =high, fill=Treatment),
-                  alpha = .3)+
-    theme_bw()+
-    labs(y="Average Lesion Length (mm)",
-         title = "Using 'ribbons' rather than error-bars")
+#Drop this plot
+# p3<-ggplot(data = plot_df,
+#        aes(x = TimeValue,
+#            y = average.Lesion.mm,
+#            color = Treatment,
+#            group = Treatment))+
+#     geom_point() + geom_line()+
+#     geom_ribbon(aes(ymin=low, ymax =high, fill=Treatment),
+#                   alpha = .3)+
+#     theme_bw()+
+#     labs(y="Average Lesion Length (mm)",
+#          title = "Using 'ribbons' rather than error-bars")
 
 
 p2<-ggplot(data = plot_df,
