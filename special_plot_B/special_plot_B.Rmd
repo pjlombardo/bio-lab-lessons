@@ -640,7 +640,7 @@ p4<-ggplot(data = plot_df,
                aes(x = TimeValue, y = Lesion.mm,
                    color=Treatment),
                pch = 19,alpha=.6,size=1,
-               position=position_jitter(width=.05))+
+               position=position_jitter(width=2))+
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   # alpha = .5)+
     theme_bw()+

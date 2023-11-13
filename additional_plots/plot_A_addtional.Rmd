@@ -33,14 +33,14 @@ The experiment monitored several lettuce leaves within each treatment class:
 * Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
 * Nine leaves inoculated with $\Delta$budB mutant (`budB`).
 
-At 24, 48, and 72 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 72 hrs, the soft rotted tissue was mashed up to evaluate the pH.
+At 20, 50, and 100 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 100 hrs, the soft rotted tissue was mashed up to evaluate the pH.
 
 
 ## Preparing data frames
 We will need our raw data, but filtered to only include the endpoint measurements (i.e., those at 72 hours). We save this as `experiment72`
 ```{r}
 experiment %>% 
-    filter(Time=="72hr") -> experiment72
+    filter(TimeGroup=="100hr") -> experiment100
 ```
 
 We will also need a data frame with summary information. Specifically, for each `Treatment` group we want
@@ -53,7 +53,7 @@ We will also need a data frame with summary information. Specifically, for each 
 Here is the code to make that data frame, which we call `summary_experiment`
 ```{r}
 experiment %>% 
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
     summarize(average_pH = mean(pH),
             std.dev_pH = sd(pH)) %>%
@@ -68,7 +68,7 @@ ggplot(data = summary_experiment,
        aes(x = Treatment, y = average_pH))+
     geom_col(aes(fill = Treatment))+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    labs(y="Average pH", caption = "Figure 1: Leaf pH at 100 hours by Treatment")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 ```
 
@@ -84,10 +84,10 @@ ggplot(data = summary_experiment,
        aes(x = Treatment, y = average_pH))+
     geom_col(aes(fill = Treatment))+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment")+
+    labs(y="Average pH")+
     scale_y_continuous(breaks = seq(0,7,by = 1)) +
     # New code to adjust colors!
-    scale_fill_brewer(palette="Accent")+theme_bw()+labs(title="Adjust color schemes with `brewer`")
+    scale_fill_brewer(palette="Accent")+theme_bw()+labs(caption ="Adjust color schemes with `brewer`")
 ```
 
 
@@ -95,41 +95,64 @@ ggplot(data = summary_experiment,
 ```{r}
 ggplot(data = summary_experiment,     
        aes(x = Treatment, y = average_pH))+
-    geom_errorbar(aes(ymin = low, ymax = high,color=Treatment), width = 0.5,linewidth=.7)+
+    geom_errorbar(aes(ymin = low, ymax = high,color=Treatment), width = 0.25,linewidth=.7)+
     geom_point(aes(fill = Treatment),pch = 21,size=3)+
-    labs(y="Average pH", title = "Confidence intervals only")+
+    labs(y="Average pH", caption = "Confidence intervals only")+
     scale_y_continuous(limits=c(3,7),breaks = seq(3,7,by = 1))+theme_bw()
 
 ```
 
-## Overlaying data over the original plot
+Alternative code using `stat_summary`
 ```{r}
+# custom function for creating error bar information
+get_errorbars<-function(y){
+        return(data.frame(y=mean(y),
+                   ymin=mean(y)-2*sd(y),
+                   ymax=mean(y) +2*sd(y)
+                   ))
+}
+
+ggplot(data = experiment100,     
+       aes(x = Treatment, y = pH))+
+    stat_summary(
+        # Note that we use the argument fun.data here
+        fun.data = get_errorbars,
+        geom = "errorbar", 
+        aes(color=Treatment), 
+        width=.25)+
+    stat_summary(fun = mean, geom="point",
+                 aes(fill = Treatment),
+                 pch = 21,size=3)+
+    labs(y="Average pH", title = "Confidence intervals only")+
+    scale_y_continuous(limits=c(3,7),breaks = seq(3,7,by = 1))+theme_bw()
+```
+
+## Overlaying data over the original plot
+```{r echo =FALSE}
 ggplot(data = summary_experiment,     
        aes(x = Treatment, y = average_pH))+
     # We added alpha=0.6 outside of the aesthetics to make 
     # the bars less visible and help highlight the data points 
     geom_col(aes(fill = Treatment),alpha = 0.6)+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 72 hours by Treatment",
-         # We also add a subtitle to make the meaning of the 
-         # columns clear
-         subtitle = "(Columns indicate the mean pH for each group.)")+
+    labs(y="Average pH", Caption = "Leaf pH at 72 hours by Treatment\n(Columns indicate the mean pH for each group.)")+
     scale_y_continuous(breaks = seq(0,7,by = 1)) + 
     # New code to add the data points over the other plot
-    geom_point(data = experiment72,
+    geom_point(data = experiment100,
                     aes(x=Treatment,y=pH,fill=Treatment),
                     position=position_jitter(width=.2),
                     pch = 21)
 ```
 
+We do not provide the code for this particular plot because it is left as an extra credit exercise.
 
 ## Mixing violin plots and boxplots
 ```{r}
-ggplot(data = experiment72,     
+ggplot(data = experiment100,     
        aes(x = Treatment, y = pH))+
     geom_boxplot()+
     geom_violin(aes(fill = Treatment),alpha = .3,color=NA)+
-    labs(y="pH", title = "Mix boxplots and violin plots to see the\ndistributions by treatment group")+
+    labs(y="pH", caption = "Mix boxplots and violin plots to see the\ndistributions by treatment group")+
     scale_y_continuous(breaks = seq(0,7,by = 1))+theme_bw()
 ```
 
@@ -139,7 +162,7 @@ In this...
 measurement_type.labs<-c("Lesion Length (mm)","pH")
 names(measurement_type.labs)<-c("Lesion.mm","pH")
 experiment %>%
-    filter(Time=="72hr") %>%
+    filter(TimeGroup=="100hr") %>%
     pivot_longer(
         cols=c("Lesion.mm","pH"),
         names_to="measurement_type",
@@ -158,8 +181,7 @@ experiment %>%
     facet_grid(rows=vars(measurement_type),
                scales="free_y",
                labeller = labeller(measurement_type=measurement_type.labs))+
-    labs(y="",title="Comparing endpoint metrics of pH and Lesion length (mm)",
-         subtitle="Bars represent means, boxes cover the interquartile range.")+
+    labs(y="",caption="Comparing endpoint metrics of pH and Lesion length (mm)\n Bars represent means, boxes cover the interquartile range.")+
     theme_bw()+theme(legend.position = "none")
 ```
 

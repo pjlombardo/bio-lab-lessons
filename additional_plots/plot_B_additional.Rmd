@@ -33,13 +33,13 @@ The experiment monitored several lettuce leaves within each treatment class:
 * Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
 * Nine leaves inoculated with $\Delta$budB mutant (`budB`).
 
-At 24, 48, and 72 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 72 hrs, the soft rotted tissue was mashed up to evaluate the pH.
+At 20, 50, and 100 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 100 hrs, the soft rotted tissue was mashed up to evaluate the pH.
 
 ## Preparing the data frame
 
 ```{r message = FALSE}
 experiment %>% 
-    group_by(Treatment, Time) %>%
+    group_by(Treatment, TimeValue) %>%
     summarize(average.Lesion.mm = mean(Lesion.mm), 
             stddev.Lesion.mm = sd(Lesion.mm)) %>%
     mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
@@ -50,7 +50,7 @@ experiment %>%
 
 ```{r message = FALSE}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
@@ -59,7 +59,7 @@ ggplot(data = plot_df,
                   alpha = .5)+
     theme_bw()+
     labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         caption = "Rot lesion length as a function of time for three treatment groups")
 ```
 
 ## Point, line, and error-bars "dodged" to avoid overlap
@@ -70,35 +70,34 @@ ggplot(data = plot_df,
            color = Treatment,
            group = Treatment))+
     geom_point(position=position_dodge(width=3)) + geom_line(position=position_dodge(width=3))+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+    geom_errorbar(aes(ymin=low, ymax =high), width = 3,
                   alpha = .5, position=position_dodge(width=3))+
     theme_classic()+
     labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+         caption = "Rot lesion length as a function of time for three treatment groups")
 ```
 
 ## Means plotted as diamonds, overlayed with data.
 
 ```{r}
 ggplot(data = plot_df,
-       aes(x = Time,
+       aes(x = TimeValue,
            y = average.Lesion.mm,
            color = Treatment,
            group = Treatment))+
-    geom_point(size = 3, pch = 23,aes(fill=Treatment),color='black',
-               alpha=.8) + 
-    geom_line()+
     geom_point(data = experiment,
-               aes(x = Time, y = Lesion.mm,
+               aes(x = TimeValue, y = Lesion.mm,
                    color=Treatment),
                pch = 19,alpha=.6,size=1,
-               position=position_jitter(width=.05))+
+               position=position_jitter(width=2))+
+        geom_line()+
+        geom_point(size = 3, pch = 23,aes(fill=Treatment),color='black',
+               alpha=.8) +
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   # alpha = .5)+
     theme_bw()+
     labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups",
-         subtitle = "(Diamonds represent mean lesion lengths (mm)")
+         caption = "Rot lesion length as a function of time for three\n(Diamonds represent mean lesion lengths (mm) treatment groups")
 ```
 
 
@@ -120,7 +119,7 @@ ggplot(data = .,
     theme_bw()+
     labs(y="Lesion Length (mm)",
          x="Time (hrs)",
-         title = "Separate boxplots by Treatment, with time progression\ninside each subplot")
+         caption = "Separate boxplots by Treatment, with time progression\ninside each subplot")
 ```
 
 
@@ -136,7 +135,8 @@ ggplot(data = .,
            fill=Treatment))+
     # geom_violin()+
     geom_boxplot(aes(group=as.factor(TimeValue)),
-                     color='gray1',alpha=.3)+
+                     color='gray1',alpha=.3,
+                 outlier.shape=NA)+
     geom_point(aes(color=Treatment),pch=21,
                position=position_jitter(width=3))+
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
@@ -144,6 +144,6 @@ ggplot(data = .,
     facet_grid(cols=vars(Treatment))+
     theme_bw()+
     labs(y="Lesion Length (mm)",
-         title = "Boxplots with data overlayed")
+         caption = "Boxplots with data overlayed")
 ```
 
