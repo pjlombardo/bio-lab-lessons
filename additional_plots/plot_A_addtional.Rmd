@@ -37,7 +37,7 @@ At 20, 50, and 100 hours, disease progression was monitored as the size of the s
 
 
 ## Preparing data frames
-We will need our raw data, but filtered to only include the endpoint measurements (i.e., those at 72 hours). We save this as `experiment72`
+We will need our raw data, but filtered to only include the endpoint measurements (i.e., those at 100 hours). We save this as `experiment100`
 ```{r}
 experiment %>% 
     filter(TimeGroup=="100hr") -> experiment100
