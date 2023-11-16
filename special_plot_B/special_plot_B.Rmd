@@ -88,7 +88,7 @@ Shall we get started?
 ## Planning our plot
 Your co-author asks whether you can build the following plot in `ggplot2`; she provides a quick, hand-drawn sketch:
 
-<center><img src="images/plot1draw.jpg" alt="Co-author Plot Sketch" width="70%"></center>
+<center><img src="images/drawplot.png" alt="Co-author Plot Sketch" width="70%"></center>
 
 To translate a plot into `ggplot()` code, we start by considering two questions:
 
@@ -98,10 +98,12 @@ To translate a plot into `ggplot()` code, we start by considering two questions:
 ### Aesthetics
 Getting started with the aesthetics is easiest because our axes will always be part of the aesthetics. Looking at how the axes are labeled, we can surmise:
 
-* `x`: The $x$-axis aesthetic will be our `Treatment` variable, because our group classifications appear as the labels along the axis.
-* `y`: The $y$-axis aesthetic is trickier.  Notice it is labeled with ***average*** Lesion Length.  Average lesion length is related to, *but not the same as* the `Lesion.mm` measurement. 
+* `x`: The $x$-axis aesthetic will be related to *time*, but should we use `TimeGroup` (categorical) or `TimeValue` (quantitative/numeric)?
+    * Notice the spacing of the $x$-axis; specifically, `20` and `50` are close, and there is a larger distance to the value of `100`.  This is a visual cue that the plot is considering these as *numeric* values, rather than groups.^[When using a grouping variable as the `x` aesthetic, the groups are *evenly space* on the $x$-axis.]  
+    * We will use `TimeValue`, the numeric variable measuring time, as our $x$-axis aesthetic. 
+* `y`: The $y$-axis is also tricky. Notice the $y$-axis is labeled with ***average*** Lesion Length.  Average lesion length is related to, *but not the same as* the `Lesion.mm` measurement. 
 
-> **Important Idea:** Because the `y` aesthetic reports the average (or mean) of `Lesion.mm`, we will need to use a data frame that has contains this average as a variable for each group *and at each time point*.
+> **Important Idea:** Because the `y` aesthetic reports the average (or mean) of `Lesion.mm`, we will need to use a data frame that has contains this average as a variable for each treatment group *and at each time point*.
 
 * `color`: The point-line elements in the plot are organized by color, which depends on `Treatment`.  This will also need to be an aesthetic because it depends on data.
 
@@ -310,6 +312,8 @@ Now that the axes are set up, we can add our first geometries.  Remember that th
 In this case, we will use `geom_point()` and `geom_line()` as our geometries. Add both of them to the code below!
 
 (*Note*: you will get a plot, but not the one that you want! Don't panic :))
+
+***NOTE WHEN WE USE A QUANTITATIVE VARIABLE, THIS WORKS FINE.  WE NEED THE GROUP AESTHETIC WHEN `x` IS A CATEGORICAL VARIABLE***
 
 ```{r geoms, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
 # add the geometry to the code below
