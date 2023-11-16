@@ -20,7 +20,7 @@ experiment <- read.csv('data/experiment_data.csv', header = T)
 details summary { 
   cursor: pointer;
   color: rgb(154, 7, 7);
-  font-size: 18px;
+  font-size: 15px;
   font-style: italic;
   font-family: Georgia;
 }
@@ -142,14 +142,17 @@ Having understood and processed the plot we want to build, we can now describe t
 2. Because our $x$-axis aesthetic involves multiple time points, we will actually need the summaries described in (1) above *for each time point as well*: 20, 50, and 100 hours.  We can accomplish this by also including `TimeValue` in the `group_by()` function.
 3. We will also need to add columns (using `mutate()`) for where the error bars will start and stop: `mean` $\pm$ `2*std.dev`. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev. 
 
+***
+
 <details>
 <summary> $\blacktriangleright$ A note on the error-bar formula `mean` $\pm$ `2*std.dev`.</summary>
-***
 
 For this plotting exercise, we are using `mean` $\pm$ `2*std.dev` for our error-bar computation rather than the technical formula for a 95\% confidence interval.  This is simply for convenience, since using the simpler multiplier of 2, as opposed to a $t_{\alpha/2}$ critical value, will give a reasonable approximation of the 95\% confidence interval in most cases. Moreover, any differences between our estimate and the correct confidence interval would not be *visible* in the figure.
 
-***
+
 </details>
+
+***
 
 With this in mind, our plotting data frame should have four variables:
 

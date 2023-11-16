@@ -24,7 +24,7 @@ final_df<-experiment %>%
 details summary { 
   cursor: pointer;
   color: rgb(154, 7, 7);
-  font-size: 18px;
+  font-size: 15px;
   font-style: italic;
   font-family: Georgia;
 }
