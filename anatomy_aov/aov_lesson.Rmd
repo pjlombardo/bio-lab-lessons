@@ -28,6 +28,9 @@ details summary {
   font-style: italic;
   font-family: Georgia;
 }
+li{
+  margin: 10px 0;
+}
 ```
 
 ## Understanding the experiment

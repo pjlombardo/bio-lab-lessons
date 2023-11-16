@@ -16,16 +16,30 @@ experiment <- read.csv('data/experiment_data.csv', header = T)
 ```
 
 
+```{css, echo=FALSE}
+details summary { 
+  cursor: pointer;
+  color: rgb(154, 7, 7);
+  font-size: 18px;
+  font-style: italic;
+  font-family: Georgia;
+}
+
+li{
+  margin: 10px 0;
+}
+```
+
 ## Understanding the experiment
 In this lesson, we will learn how to create an important plot for visualizing the progression in a mean measurement across time for several groups.  To best understand the visual, we should understand the underlying experiment.  The data, and the description below, were generously provided by Dr. Grace Kwan.
 
-#### Abstract
+#### Background
 
-*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. You have probably seen P. carotovorum in action if you have ever left some fresh produce in the refrigerator too long and came back to a slimy, watery mess. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients -- nutrients that support the continued growth of the bacterial pathogen.*
+*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme’s activity diminishes. Organisms may need to regulate the pH of their environment in order to ensure that their enzymes function optimally.*
 
-*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme's activity diminishes. Pathogens may need to regulate the pH of their environment in order to ensure that their enzymes function optimally. *
+*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients – nutrients that support the continued growth of the bacterial pathogen. We often see this as slimy, watery lesions that rapidly consume whole fruits or vegetables.*
 
-*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to break down plant tissues (i.e., rot them). P. carotovorum uses the BudB protein to limit acid production by providing an alternate fermentation pathway that results in a product of neutral pH.*
+*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to rot plant tissues. The enzymes that break down plant cell walls require a slightly basic pH. To ensure a favorable environment, P. carotovorum uses the BudB protein to limit acid production during metabolism by providing an alternate fermentation pathway that results in a product of neutral pH.*
 
 ### Experiment details
 The experiment monitored several lettuce leaves within each treatment class:
@@ -122,9 +136,18 @@ Let's go!
 ## Preparing a plotting data frame {data-progressive=TRUE}
 Having understood and processed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
 
-1. Because of our $y$-axis aesthetic, which is an average, we will need to `group_by()` the `Treatment` variable, and `summarize()` to get the mean `Lesion.mm` for each group.
-2. Because our $x$-axis aesthetic involves multiple time points, we will actually need the summaries described in (1) above *for each time point*: 20, 50, and 100 hours.  We can accomplish this by adding `TimeValue` to the `group_by()` function.
-3. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev. These variables will need to have this information for each group at each time point.
+1. Because our $y$-axis aesthetic will present averages, we will need find the mean lesion length for each of our treatment groups.  Hence, we will `group_by()` the `Treatment` variable, and then `summarize()` to compute the mean `Lesion.mm`.
+2. Because our $x$-axis aesthetic involves multiple time points, we will actually need the summaries described in (1) above *for each time point as well*: 20, 50, and 100 hours.  We can accomplish this by also including `TimeValue` in the `group_by()` function.
+3. We will also need to add columns (using `mutate()`) for where the error bars will start and stop: `mean` $\pm$ `2*std.dev`. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev. 
+
+<details>
+<summary> $\blacktriangleright$ A note on the error-bar formula `mean` $\pm$ `2*std.dev`.</summary>
+***
+
+For this plotting exercise, we are using `mean` $\pm$ `2*std.dev` for our error-bar computation rather than the technical formula for a 95\% confidence interval.  This is simply for convenience, since using the simpler multiplier of 2, as opposed to a $t_{\alpha/2}$ critical value, will give a reasonable approximation of the 95\% confidence interval in most cases. Moreover, any differences between our estimate and the correct confidence interval would not be *visible* in the figure.
+
+***
+</details>
 
 With this in mind, our plotting data frame should have four variables:
 

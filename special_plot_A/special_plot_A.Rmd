@@ -15,17 +15,30 @@ knitr::opts_chunk$set(echo = FALSE)
 experiment <- read.csv('data/experiment_data.csv', header = T)
 ```
 
+```{css, echo=FALSE}
+details summary { 
+  cursor: pointer;
+  color: rgb(154, 7, 7);
+  font-size: 18px;
+  font-style: italic;
+  font-family: Georgia;
+}
+
+li{
+  margin: 10px 0;
+}
+```
 
 ## Understanding the experimental data
 In this lesson, we will learn how to create an important plot for visualizing differences in an mean measurement across several groups.  To best understand the visual, we should understand the underlying experiment.  The data, and the description below, were generously provided by Dr. Grace Kwan.
 
-#### Abstract
+#### Background
 
-*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. You have probably seen P. carotovorum in action if you have ever left some fresh produce in the refrigerator too long and came back to a slimy, watery mess. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients -- nutrients that support the continued growth of the bacterial pathogen.*
+*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme’s activity diminishes. Organisms may need to regulate the pH of their environment in order to ensure that their enzymes function optimally.*
 
-*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme's activity diminishes. Pathogens may need to regulate the pH of their environment in order to ensure that their enzymes function optimally. *
+*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients – nutrients that support the continued growth of the bacterial pathogen. We often see this as slimy, watery lesions that rapidly consume whole fruits or vegetables.*
 
-*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to break down plant tissues (i.e., rot them). P. carotovorum uses the BudB protein to limit acid production by providing an alternate fermentation pathway that results in a product of neutral pH.*
+*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to rot plant tissues. The enzymes that break down plant cell walls require a slightly basic pH. To ensure a favorable environment, P. carotovorum uses the BudB protein to limit acid production during metabolism by providing an alternate fermentation pathway that results in a product of neutral pH.*
 
 ### Experiment details
 The experiment monitored several lettuce leaves within each treatment class:
@@ -134,8 +147,17 @@ Ready to get plotting?
 Having surveyed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
 
 1. Since we are dealing with `pH`, which was only measured at the end of the experiment, we need to `filter()` to only keep rows where `TimeGroup` equals "100hr".
-2. Because of our axis aesthetics, we need to `group_by()` the `Treatment` variable, and `summarize()` to get the mean `pH` for each group.
-3. Since we'll be using `geom_errorbar()`, we also need to add columns (using `mutate()`) for where the error bars will start and stop: mean $\pm$ 2*std.dev.
+2. Because we want to display the average (mean) pH for each group, we need to take the data and `group_by()` the `Treatment` variable then `summarize()` the data for each Treatment group to calculate the mean `pH`.
+3. We will also need to add columns (using `mutate()`) for where the error bars will start and stop: `mean` $\pm$ `2*std.dev`.
+
+<details>
+<summary> $\blacktriangleright$ A note on the error-bar formula `mean` $\pm$ `2*std.dev`.</summary>
+***
+
+For this plotting exercise, we are using `mean` $\pm$ `2*std.dev` for our error-bar computation rather than the technical formula for a 95\% confidence interval.  This is simply for convenience, since using the simpler multiplier of 2, as opposed to a $t_{\alpha/2}$ critical value, will give a reasonable approximation of the 95\% confidence interval in most cases. Moreover, any differences between our estimate and the correct confidence interval would not be *visible* in the figure.
+
+***
+</details>
 
 ### Step 1: filtering
 Recall that we only want rows where `TimeGroup` equals (`==`) the "100hr" mark.  Use the code chunk below, with the `filter` command, to do this and check your work by sifting through the data frame.
@@ -434,12 +456,13 @@ ggplot(data = plot_df,
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
 
-We want to make two modifications:
+We want to make three modifications:
 
 1. We want better axis labels and a title; specifically, we want 
     * the $y$-axis to be "Average pH" and 
     * a title of "Leaf pH at 100 hours by Treatment."
 2. We want the $y$-axis to have markings for every unit of pH (i.e., it should be labeled 0, 1, 2, ...7).
+3. We want to re-order the Treatment groups on the $x$-axis to ... ***Prescription here***
 
 The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involves *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
 
@@ -456,6 +479,7 @@ ggplot(data = plot_df,
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="new y axis", title = "this is on top")
 ```
+
 ```{r labels-hint-1}
 ggplot(data = plot_df,
        aes(x = Treatment,
