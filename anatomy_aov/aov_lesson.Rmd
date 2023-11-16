@@ -31,21 +31,21 @@ details summary {
 ```
 
 ## Understanding the experiment
-In this lesson, we will learn how to use Analysis of Variance (ANOVA) to test for statistically significant differences in means for three treatment groups. The data, and the description below, were generously provided by Dr. Grace Kwan.
+In this lesson, we will learn how to use Analysis of Variance (ANOVA) to test for statistically significant differences in means between multiple treatment groups. The data, and the description below, were generously provided by Dr. Grace Kwan.
 
-#### Abstract
+#### Background
 
-*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. You have probably seen P. carotovorum in action if you have ever left some fresh produce in the refrigerator too long and came back to a slimy, watery mess. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients -- nutrients that support the continued growth of the bacterial pathogen.*
+*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme’s activity diminishes. Organisms may need to regulate the pH of their environment in order to ensure that their enzymes function optimally.*
 
-*Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme's activity diminishes. Pathogens may need to regulate the pH of their environment in order to ensure that their enzymes function optimally. *
+*Pectobacterium carotovorum is a commonly found bacterial pathogen that rots plant tissues. This bacterium uses enzymes to break down plant cell walls, causing the plant cells to burst from osmotic pressure and release all of their water and nutrients – nutrients that support the continued growth of the bacterial pathogen. We often see this as slimy, watery lesions that rapidly consume whole fruits or vegetables.*
 
-*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to break down plant tissues (i.e., rot them). P. carotovorum uses the BudB protein to limit acid production by providing an alternate fermentation pathway that results in a product of neutral pH.*
+*This experiment assessed the importance of environmental pH on the ability of P. carotovorum to rot plant tissues. The enzymes that break down plant cell walls require a slightly basic pH. To ensure a favorable environment, P. carotovorum uses the BudB protein to limit acid production during metabolism by providing an alternate fermentation pathway that results in a product of neutral pH.*
 
 ### Experiment details
 The experiment monitored several lettuce leaves within each treatment class:
 
 * Three control leaves without bacteria (`Control`)
-* Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
+* Nine leaves inoculated with wild-type P. carotovorum (`wildtype`), and
 * Nine leaves inoculated with $\Delta$budB mutant (`budB`).
 
 At 20, 50, and 100 hours, disease progression was monitored as the length of the soft rot area in millimeters (`Lesion.mm`). At 100 hours, the soft rotted tissue was mashed up to evaluate the pH. 
@@ -91,7 +91,7 @@ When in doubt, you can always use the "Import Dataset" button in the upper-right
 ***
 
 
-Run the code block below to view the data and its format in `R`.  Remember you can use "Next" button in the lower left to see more rows of the data.
+Run the code block below to view the data and its format in `R`.  Remember you can use "Next" button in the lower right to see more rows of the data.
 ```{r p-value, exercise = TRUE, exercise.lines=3}
 experiment
 ```
@@ -153,8 +153,8 @@ As a hypothesis test, ANOVA is equipped with a *null hypothesis*, which we hope 
 
 As with all hypothesis tests, we either conclude by
 
-* **rejecting $H_0$**: this means our samples (more specifically, *sample means*) provided enough evidence to suggest *at least one group mean* is different from the rest.
-* **failing to reject $H_0$**: this means our samples did not provide enough evidence to suggest that the group means are different at the population level.
+* **rejecting $H_0$**: this implies our samples (more specifically, our *sample means*) provided enough evidence to suggest *at least one group mean* is different from the rest.
+* **failing to reject $H_0$**: this implies our samples did not provide enough evidence to suggest that the group means are different at the population level.
 
 <!-- ### A new perspective -->
 
@@ -173,7 +173,7 @@ To run an ANOVA in `R`, we need to identify two important variables from the dat
 For an ANOVA, we also require (among other assumptions) that:
 
 * the *independent variable* is a categorical (grouping) variable, with at least three potential levels (groups); and
-* the *dependent variable* is a quantitative variable.
+* the *dependent variable* is a quantitative (numeric) variable.
 
 Return to the details of our experiment and answer the questions below.
 
@@ -229,7 +229,7 @@ So, for our case, we will often see code that uses `Lesion.mm ~ Treatment`.
 ### Preparing our analysis data frame
 Recall that we are only analyzing data from the *end of the experiment.* This means we want rows where `TimeGroup` equals (`==`) the "100hr" mark. To prepare our data set, we want to
 
-* Use the `filter()` command to keep only rows with data from the end of the experiment; and
+* Use the `filter()` command to to keep only rows with data from the end timepoint of the experiment; and
 * Use the `select()` command to keep the `Treatment`, `Lesion.mm`, `TimeGroup`, and `pH` variables.
 
 ***
@@ -434,7 +434,7 @@ The last column consists of our adjusted $P$-values. The `Wild-budB` comparison,
 Any row with an adjusted $P$-value *below* 0.05 indicates a test that provides evidence for a difference in means *between these two groups*. 
 
 ```{r pairwise-p-question}
-question("Between which two groups did Tukey's HSD detect a significant difference in means? Use a significance level (i.e. $P$-value threshold) of 0.05. <br> *Select all that apply*.",
+question("Between which two groups did Tukey's HSD detect a significant difference in means? Use a significance level (i.e. $P$-value threshold) of 0.05.",
     answer("Wild-budB", message = "This has an adjusted $P$-value of 0.058, which is not below 0.05. However, we do admit that this is *close*, and probably should raise an eyebrow on the researcher."),
     answer("Wild-Control", correct = TRUE),
     answer("Control-budB", message = "This has an adjusted $P$-value of 0.47, which is not below 0.05."),
