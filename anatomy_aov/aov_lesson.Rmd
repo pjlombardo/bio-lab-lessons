@@ -11,6 +11,8 @@ library(learnr)
 library(dplyr)
 library(ggplot2)
 library(tidyr)
+library(knitr)
+library(kableExtra)
 knitr::opts_chunk$set(echo = FALSE)
 experiment <- read.csv('data/experiment_data.csv', 
                        header = T,
@@ -152,22 +154,22 @@ Let's get started with a quick review of analysis of variance.  ANOVA is a stati
 
 As a hypothesis test, ANOVA is equipped with a *null hypothesis*, which we hope our samples will provide evidence ***against***.  For an ANOVA, the null hypothesis is
 
-> $H_0$: the population means are equal across *all* groups.<br>  ($\mu_{_\text{group 1}} = \mu_{_\text{group 2}} = \mu_{_\text{group 3}} = \dots = \mu_{_\text{group $k$}}$)
+> $H_0$: the population means are equal across *all* groups.<br>  ($\mu_{_\text{group 1}} \ \ = \   \mu_{_\text{group 2}} \ \ = \  \mu_{_\text{group 3}} \ \ = \  \dots \ \ = \  \mu_{_\text{group $k$}}$)
 
 As with all hypothesis tests, we either conclude by
 
 * **rejecting $H_0$**: this implies our samples (more specifically, our *sample means*) provided enough evidence to suggest *at least one group mean* is different from the rest.
-* **failing to reject $H_0$**: this implies our samples did not provide enough evidence to suggest that the group means are different at the population level.
+* **failing to reject $H_0$**: this implies our samples did not provide enough evidence to suggest that at least one of the group means is different at the population level.
 
 <!-- ### A new perspective -->
 
 To run an ANOVA in `R`, we need to identify two important variables from the data frame:
 
 * **Independent variable:** this is typically a variable that researchers have some control over, and they purposely let it vary to test for some sort of response in the *dependent variable.*
-    * The *independent variable* is sometimes called the *explanatory variable*; we hope to find it helps "explain" variation in the response variable.
+    * The *independent variable* is sometimes called the *explanatory variable*; we hope to find that it helps "explain" variation in the response variable.
 
 * **Dependent variable:** this is typically a variable that researchers use to measure the response to differences in an *independent variable*. The researchers cannot (and should not) control what this variable is doing!
-    * The *dependent variable* is sometimes called the *response variable*; we hope to find that it as "responds" to changes in the explanatory variable.
+    * The *dependent variable* is sometimes called the *response variable*; we hope to find that it "responds" to differences in the explanatory variable.
 
 <!-- When looking for an association, we are simply asking: -->
 
@@ -218,7 +220,7 @@ question("In the P. carotovorum experiment, what variable or variables from the 
 ## Getting ready{data-progressive=TRUE}
 In the previous section we determined our data for the *P. carotovorum* experiment could potentially inform *two* different ANOVAs.  For demonstration, we will focus on the ANOVA where the
 
-* **Independent (explanatory) variable** is `Treatment`, differentiating the groups of lettuce leaves that were inoculated differently (or not at all, as is the case with the control); and
+* **Independent (explanatory) variable** is `Treatment`, identifying the groups of lettuce leaves that were inoculated differently (or not at all, as is the case with the control); and
 * **Dependent (response) variable** is `Lesion.mm`, a response measuring the efficacy of the inoculated bacteria at rotting the leaf.
 
 We will save the ANOVA involving `pH` for the review exercises.
@@ -240,11 +242,11 @@ Recall that we are only analyzing data from the *end of the experiment.* This me
 *Quick Syntax Notes*: 
 
 * When doing comparisons in `R`, everything is case-sensitive and also sensitive to spaces (or extra spaces).  
-    * For example, all of the following are different in `R`: `"24hr"`, `"24 hr"`, and `"24HR"`.<br></br>
+    * For example, all of the following are different in `R`: `"20hr"`, `"20 hr"`, and `"20HR"`.<br></br>
 * Variable names (i.e., the columns of your data frame) do not require quotes. 
     * For example, we do not need quotes when using `Lesion.mm` in our code.<br></br>
 * The *levels* (or groups) of a categorical variable ***do*** require quotes. 
-    * For example, to specify the twenty-four hour group, we need `"24hr"` in our code.
+    * For example, to specify the twenty hour group, we need `"20hr"` in our code.
     
 ***
 
@@ -276,12 +278,12 @@ experiment %>%
     filter(TimeGroup == "100hr") %>%
     select(Treatment, TimeGroup, Lesion.mm, pH)
 ```
-**Answer Check:** There should be 21 rows in this data frame, and four columns. Moreover, *every* entry for `TimeGroup` should be "100hr".
+**Answer Check:** There should be 21 rows in this data frame, and four columns. Moreover, *every* entry for `TimeGroup` should be `"100hr"`.
 
 We have stored this data frame under the shortcut name `final_df`. We will use it for the rest of the sections and exercises. For now, we will focus on `Lesion.mm` as our dependent variable and pursue that particular ANOVA. We will not use `pH` until the review exercises.
 
-### Great work!
-In the next two sections, we will fit an ANOVA and explore the whether there are differences in the mean lesion length among our three treatment groups: `Wild`, `budB`, and `Control`.
+#### Great work!
+In the next two sections, we will fit an ANOVA and explore the whether there are differences in the mean lesion length among our three treatment groups: `"wildtype`, `"budB"`, and `"Control"`.
 
 Here we go!
 
@@ -323,7 +325,7 @@ lesion.aov
 ### ANOVA results and interpretation
 Yes... we're all thinking the same thing.  ***Where's my $P$-value!?***
 
-The default report from the `aov()` function does not report a $P$-value, but we can get it easily.  Since we saved the ANOVA output under the name `lesion.aov`, we can use other functions to get more information.
+The default report from the `aov()` function does not report a $P$-value, but we can get it easily.  Since we saved the ANOVA output under the name `lesion.aov`, we can use other functions to extract more information.
 
 One such function is `summary()`, which will create a standard ANOVA table, and also report our $P$-value for the hypothesis test.
 
@@ -346,10 +348,12 @@ It's not obvious, but the value below the column heading `Pr(>F)` is the $P$-val
 
 So, for our ANOVA involving potential differences in mean lesion length between our treatment groups, *we have a $P$-value of 0.0136.* But, what does that ***mean***? 
 
-In general, researchers follow these "guidelines":^[Notice that the language we use here is strongly suggestive, but not certain. We never *prove* anything with a hypothesis test; rather, we provide evidence or fail to provide evidence. ]
+In general, researchers follow these "guidelines":
 
 * If the $P$-value is below 0.05, we have evidence to reject the null hypothesis.
 * If the $P$-value is above 0.05, there is not enough evidence to reject the null hypothesis.
+
+(Notice that the language we use here is strongly suggestive, but not certain. We never *prove* anything with a hypothesis test; rather, we provide evidence or fail to provide evidence.)
 
 Use this guide to sort through the proper conclusion below.
 ```{r reject-question}
@@ -390,30 +394,32 @@ One more section; let's keep learning!
 ***
 ***
 
-**Optional note on "*population level*"**<br>
+<details>
+<summary> $\blacktriangleright$ Optional note on "*population level*" </summary>
 It's a little odd to use the language of "population level mean" for experiments like this.  One way to interpret this is in terms of *reproducibility*, which scientists seem to like. Recall our conclusion:
 
 *At the **population level** (so extending beyond just the data we collected), at least one treatment group will have a different mean lesion length after 100 hours than the others.*
 
 We are simply implying that this particular experiment, combined with the ANOVA results, suggests that if we were to run the experiment several more times (*reproduce it*), we would expect to see similar results of at least one group mean being different.
 
-By implying that reproducing the experiment would not change the results, we are suggesting the difference we are detecting is a feature of the *populations* from which we draw, and not particular samples. Since each reproduction of the experiment would draw from the same populations, we would not expect the results to vary in a significant way.
+With this implication, that reproducing the experiment would not change the results, we are suggesting the difference we are detecting is a feature of the *populations* from which we draw, and not particular samples. Since each reproduction of the experiment would draw from the same populations, we would not expect the results to vary in a significant way.
+</details>
 
 ## Tukey's Honest Significant Difference Test
-The ANOVA results ($P$-value = 0.0136 < 0.05) give us reason to believe that *at least one* population group mean is different from the others.  Running Tukey's Test will help us answer more interesting questions. ***But**, we should only run a post-hoc test (like Tukey's) if we first verify that our ANOVA is significiant (i.e., $P$-value $< 0.05$).
+The ANOVA results ($P$-value = 0.0136 < 0.05) give us reason to believe that *at least one* population group mean is different from the others.  Running Tukey's Test will help us answer more interesting questions. **But**, we should only run a post-hoc test (like Tukey's) if we first verify that our ANOVA is significant (i.e., $P$-value $< 0.05$).
 
 #### Tukey's test, quick summary
 Tukey's Honest Significant Difference test (Tukey's HSD) essentially runs all possible pair-wise tests for differences in means, but makes adjustments to avoid problematic increases in Type I Error rates. For our data, Tukey's HSD would run three tests:^[When your grouping variable has more than three groups, the number of combinations increase quite quickly. For example, 10 treatment groups leads to 45 pair-wise comparisons.]
 
-* Difference in means comparing `Wild` and `Control`
-* Difference in means comparing `Wild` and `budB`
-* Difference in means comparing `budB` and `Control`
+* Difference in means comparing `"wildtype"` and `"Control"`
+* Difference in means comparing `"wildtype"` and `"budB"`
+* Difference in means comparing `"budB"` and `"Control"`
 
 For each of these tests, Tukey's HSD will return "adjusted" information; both an adjusted $P$-value, and an adjusted confidence interval for the difference in means.
 
 * We can use the $P$-values to determine if there is a difference between a given pair; as usual, we look for adjusted $P$-values below 0.05.
 * We can use the confidence intervals to determine which group mean is larger.  
-    * For example, if we compare `Wild` minus `Control`, and the confidence interval for the difference in means is entirely positive, it suggests the group mean lesion length for `Wild` type will be bigger than the group mean for `Control`.
+    * For example, if we compare `"wildtype"` minus `"Control"`, and the confidence interval for the difference in means is entirely positive, it suggests the group mean lesion length for `"wildtype"` type will be bigger than the group mean for `"Control"`.
     
 ### Running Tukey's HSD
 Luckily, it is very easy to run Tukey's test in `R`. Recall that we have `lesion.aov` storing our ANOVA output for the ANOVA based on the `Lesion.mm` variable.  Simply put this inside the `TukeyHSD()` function.  
@@ -428,23 +434,39 @@ TukeyHSD(lesion.aov)
 ```
 
 ### Interpreting TukeyHSD Output
-The most important information appears in the table output.  Each row corresponds to a pairing of treatment groups, and the difference of means test was computed using that order.  For example, the row labeled `Control-budB` gives information on the difference of means test where we look at the mean lesion length for `Control` minus the mean lesion length for `budB`.
+The most important information appears in the table output.  Each row corresponds to a pairing of treatment groups, and the difference of means test was computed using that order.  For example, the row labeled `Control-budB` gives information on the difference of means test where we look at the mean lesion length for `"Control"` minus the mean lesion length for `"budB"`.
 
-The last column consists of our adjusted $P$-values. The `Wild-budB` comparison, for example, has an adjusted $P$-value of 0.058.
+The last column consists of our adjusted $P$-values. The `wildtype-budB` comparison, for example, has an adjusted $P$-value of 0.058.
 
-<center><img src="images/tukey1.png" alt="Tukey Output, P-values" width="75%"></center>
+```{r}
+TukeyHSD(aov(Lesion.mm~Treatment, final_df))$Treatment %>%
+    kable(table.attr = "style='width:85%;'") %>%
+    kable_styling() %>%
+    row_spec(3, color='black') %>%
+    row_spec(1, color = "black",
+             background = "#bdc3fc"#,
+             #popover = paste("am:", mtcars$am[1:8])
+    ) %>%
+    row_spec(2, color = "black",
+             background = "#6cd989"#,
+             #popover = paste("am:", mtcars$am[1:8])
+    ) %>%
+    column_spec(2:4, color='#ededeb') %>%
+    column_spec(5, bold=T)
+```
+
 
 Any row with an adjusted $P$-value *below* 0.05 indicates a test that provides evidence for a difference in means *between these two groups*. 
 
 ```{r pairwise-p-question}
 question("Between which two groups did Tukey's HSD detect a significant difference in means? Use a significance level (i.e. $P$-value threshold) of 0.05.",
-    answer("Wild-budB", message = "This has an adjusted $P$-value of 0.058, which is not below 0.05. However, we do admit that this is *close*, and probably should raise an eyebrow on the researcher."),
-    answer("Wild-Control", correct = TRUE),
+    answer("wildtype-budB", message = "This has an adjusted $P$-value of 0.058, which is not below 0.05. However, we do admit that this is *close*, and probably should raise an eyebrow on the researcher."),
+    answer("wildtype-Control", correct = TRUE),
     answer("Control-budB", message = "This has an adjusted $P$-value of 0.47, which is not below 0.05."),
-    answer("Wild-Control-budB", message = "This isn't a comparison that Tukey's test does."),
+    answer("wildtype-Control-budB", message = "This isn't a comparison that Tukey's test does."),
     allow_retry = T,
     random_answer_order = T,
-    incorrect = paste(random_encouragement(),"Review the criteria present in the Task, as well as our quick example."),
+    incorrect = paste(random_encouragement(),"Review the discussion of Tukey's Test and $P$-values above, then give it another try!"),
     post_message = random_praise()
   )
 ```
@@ -452,18 +474,34 @@ question("Between which two groups did Tukey's HSD detect a significant differen
 #### Confidence intervals
 The middle two columns of Tukey's output report confidence intervals for the difference in means *taken in the order of the row label.*
 
-<center><img src="images/tukey2.png" alt="Tukey Output, P-values" width="75%"></center>
+```{r}
+TukeyHSD(aov(Lesion.mm~Treatment, final_df))$Treatment %>%
+    kable(table.attr = "style='width:85%;'") %>%
+    kable_styling() %>%
+    row_spec(3, color='black') %>%
+    row_spec(1, color = "black",
+             background = "#bdc3fc"#,
+             #popover = paste("am:", mtcars$am[1:8])
+    ) %>%
+    row_spec(2, color = "black",
+             background = "#6cd989"#,
+             #popover = paste("am:", mtcars$am[1:8])
+    ) %>%
+    column_spec(c(2,5), color='#ededeb') %>%
+    column_spec(3:4, bold=T)
+```
 
-For example, Tukey's test estimates the difference between the population mean lesion length for `Control` *minus* the population mean lesion length for `budB` falls between $-46.9$ mm and 16.9 mm.
+
+For example, Tukey's test estimates the difference between the population mean lesion length for `"Control"` *minus* the population mean lesion length for `"budB"` falls between $-46.9$ mm and 16.9 mm.
 
 * This interval contains zero, so it remains possible that the difference in the populations means is zero (i.e., no difference). This aligns with the $P$-value above 0.05, hence failing to detect a difference in means for this pair.
 
 ```{r pairwise-ci-question}
 question("Considering the Tukey HSD output, which comparisons have a confidence interval that *contains* zero? <br> *Select all that apply*",
-    answer("Wild-budB",correct=TRUE),
-    answer("Wild-Control", message = "The lower limit of this confidence interval, `Wild-Control`, is about 4, which avoids zero."),
+    answer("wildtype-budB",correct=TRUE),
+    answer("wildtype-Control", message = "The lower limit of this confidence interval, `wildtype-Control`, is about 4, which avoids zero."),
     answer("Control-budB", correct = TRUE),
-    answer("Control-Wild-budB", message = "`Control-Wild-budB` isn't a comparison that Tukey's test does."),
+    answer("Control-wildtype-budB", message = "`Control-wildtype-budB` isn't a comparison that Tukey's test does."),
     allow_retry = T,
     random_answer_order = T,
     post_message = random_praise()
@@ -473,9 +511,9 @@ question("Considering the Tukey HSD output, which comparisons have a confidence 
 ### Conclusion
 Based on the ANOVA, as well as the output of Tukey's test, we can improve on our conclusions for this experiment:
 
-* We have evidence that at least one treatment group has a different mean lesion length than the other groups. Specifically,
-    * Further, a post-hoc Tukey HSD finds sufficient evidence of a difference in lesion length group means between `Control` leaves and `Wild`-inoculated leaves.
-    * The post-hoc test did not find sufficient evidence of a difference in means between `budB` and the other two groups.
+* We have evidence that at least one treatment group has a different mean lesion length than the other groups.
+    * Further, a post-hoc Tukey HSD finds sufficient evidence of a difference in mean lesion length between `"Control"` leaves and `"wildtype"`-inoculated leaves.
+    * The post-hoc test did not find sufficient evidence of a difference in means between `"budB"` and the other two groups.
 
 ### Excellent Job!
 We have learned so much in the past few sections.  Are you ready to test your knowledge?
@@ -487,20 +525,21 @@ Challenge accepted? Onward!
 ***
 ***
 
-**Optional Note**
+<details>
+<summary> $\blacktriangleright$ Optional note: but which is *bigger?* </summary>
 
 We could add more detail to the conclusion above, but notice we now provide more information than just saying "*at least one group mean is different*".
 
-We can go one step further. Notice that our confidence interval for `Wild-Control` is 4.9 mm to 68.8 mm. This is estimating the difference in means of `Wild` minus `Control`, and it is entirely positive! This suggests that the `Wild`-inoculated leaves have a larger mean lesion length than the control.  This is indicative of more disease severity.
+We can go one step further. Notice that our confidence interval for `wildtype-Control` is 4.9 mm to 68.8 mm. This is estimating the difference in means of `"wildtype"` minus `"Control"`, and it is entirely positive! This suggests that the `"wildtype"`-inoculated leaves have a larger mean lesion length than the control.  This is indicative of more disease severity.
 
-***
+</details>
 
 ## Practice exercises {data-progressive=TRUE}
 Recall from the abstract of this experiment that
 
 *Enzymes typically have optimal pH at which they work best. Above or below this optimal pH, the enzyme's activity diminishes. Pathogens may need to regulate the pH of their environment in order to ensure that their enzymes function optimally. *
 
-Based on this, a researcher might expect that the leaves inoculated with `Wild`-type P. carotovorum would attempt to control the pH on the leaf.  Rather than focusing only on the `Wild` group, let's consider all three treatment groups.
+Based on this, a researcher might expect that the leaves inoculated with `wildtype` P. carotovorum would attempt to control the pH on the leaf.  Rather than focusing only on the `wildtype` group, let's consider all three treatment groups.
 
 ### Fitting the ANOVA, printing output
 In the code-chunk below, do the following:
@@ -591,8 +630,8 @@ TukeyHSD(pH.aov)
 quiz(
     question("According to the results of Tukey's HSD, for which group-pairs do we have evidence for a difference in mean pH?<br> *Select all that apply*.",
     answer("Control-budB", message="For Control-budB, is the $P$-value below 0.05? Double check...."),
-    answer("Wild-budB", correct = TRUE),
-    answer("Wild-Control", correct = TRUE),
+    answer("wildtype-budB", correct = TRUE),
+    answer("wildtype-Control", correct = TRUE),
     allow_retry = T,
     random_answer_order = T,
     post_message = random_praise()
@@ -604,7 +643,7 @@ quiz(
     if (grepl(".*", value)) {
       correct("Great work writing your own conclusion! How does your conclusion compare with ours?")
     }
-  }), message="*An ANOVA indicated that we have evidence at least one treatment group (`Wild`,`budB`,`Control`) had a different mean pH when compared to the others.  The results of a post-hoc test, Tukey's HSD, gave evidence that `Wild` had a different mean pH than both `Control` and `budB`. We did not find evidence for a difference in mean pH when comparing `budB` and `Control`.*"
+  }), message="*An ANOVA indicated that we have evidence at least one treatment group (`\"wildtype\"`,`\"budB\"`,`\"Control\"`) had a different mean pH when compared to the others.  The results of a post-hoc test, Tukey's HSD, gave evidence that `\"wildtype\"` had a different mean pH than both `\"Control\"` and `\"budB\"`. We did not find evidence for a difference in mean pH when comparing `\"budB\"` and `\"Control\"`.*"
 )
 )
 ```
@@ -619,30 +658,30 @@ Recall that the confidence interval estimates the difference in population means
 
 ```{r bigger-questions}
 quiz(
-   question("Considering the comparison between `Control` and `budB`, what does the Tukey confidence interval for difference in means suggest?",
-    answer("The mean pH for `Control` is bigger than `budB`.", message="The order is Control minus budB. Is the confidence interval entirely *positive*? That's what we would require for this sentence to be true."),
-    answer("The mean pH for `budB` is bigger than `Control`.",message="The order is Control minus budB. Is the confidence interval entirely *negative*? That's what we would require for this sentence to be true."),
-    answer("We do not have enough evidence for a difference between the means of these groups.", correct = TRUE),
+   question("Considering the comparison between `\"Control\"` and `\"budB\"`, what does the Tukey confidence interval for difference in means suggest?",
+    answer("The mean pH for `\"Control\"` is bigger than `\"budB\"`.", message="The order is Control minus budB. Is the confidence interval entirely *positive*? That's what we would require for this sentence to be true."),
+    answer("The mean pH for `\"budB\"` is bigger than `Control`.",message="The order is Control minus budB. Is the confidence interval entirely *negative*? That's what we would require for this sentence to be true."),
+    answer("We failed to provide enough evidence to suggest a difference between the means of these groups.", correct = TRUE),
     allow_retry = T,
     random_answer_order = T,
     post_message = random_praise()
   ),
   
-  question("Considering the comparison between `Wild` and `budB`, what does the Tukey confidence interval for difference in means suggest?",
-    answer("The mean pH for `Wild` is bigger than `budB`.",
+  question("Considering the comparison between `\"wildtype\"` and `\"budB\"`, what does the Tukey confidence interval for difference in means suggest?",
+    answer("The mean pH for `\"wildtype\"` is bigger than `\"budB\"`.",
            correct=TRUE),
-    answer("The mean pH for `budB` is bigger than `Wild`.",message="The order is Wild minus budB. Is the confidence interval entirely *negative*? That's what we would require for this sentence to be true."),
-    answer("We do not have enough evidence for a difference between the means of these groups.", message="Does the confidence interval contain zero? That's what we would require for this sentence to be true."),
+    answer("The mean pH for `\"budB\"` is bigger than `\"wildtype\"`.",message="The order is wildtype minus budB. Is the confidence interval entirely *negative*? That's what we would require for this sentence to be true."),
+    answer("We failed to provide enough evidence to suggest a difference between the means of these groups.", message="Does the confidence interval contain zero? That's what we would require for this sentence to be true."),
     allow_retry = T,
     random_answer_order = T,
     post_message = random_praise()
   ),
   
-  question("Considering the comparison between `Wild` and `Control`, what does the Tukey confidence interval for difference in means suggest?",
-    answer("The mean pH for `Wild` is bigger than `Control`.",
+  question("Considering the comparison between `\"wildtype\"` and `\"Control\"`, what does the Tukey confidence interval for difference in means suggest?",
+    answer("The mean pH for `\"wildtype\"` is bigger than `\"Control\"`.",
            correct=TRUE),
-    answer("The mean pH for `Control` is bigger than `Wild`.",message="The order is Wild minus Control. Is the confidence interval entirely *negative*? That's what we would require for this sentence to be true."),
-    answer("We do not have enough evidence for a difference between the means of these groups.", message="Does the confidence interval contain zero? That's what we would require for this sentence to be true."),
+    answer("The mean pH for `\"Control\"` is bigger than `\"wildtype\"`.",message="The order is wildtype minus Control. Is the confidence interval entirely *negative*? That's what we would require for this sentence to be true."),
+    answer("We failed to provide enough evidence to suggest a difference between the means of these groups.", message="Does the confidence interval contain zero? That's what we would require for this sentence to be true."),
     allow_retry = T,
     random_answer_order = T,
     post_message = random_praise()
