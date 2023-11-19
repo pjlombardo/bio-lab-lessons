@@ -232,7 +232,7 @@ We first need the `mean()` function and the `sd()` function to compute the mean 
 #### Exercise: summary statistics for pH
 Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.  
 
-Use the following names for these summary variables: `average_pH` and `std.dev_pH`.
+Use the following names for these summary variables: `average.pH` and `stddev.pH`.
 
 ```{r group-by, exercise = TRUE, exercise.lines=6}
 experiment %>% 
@@ -250,24 +250,24 @@ experiment %>%
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = ..., # write your computation
-            std.dev_pH = ...   # write your computation
+    summarize(average.pH = ..., # write your computation
+            stddev.pH = ...   # write your computation
              )
 ```
 ```{r group-by-solution}
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH), # write your computation
-            std.dev_pH = sd(pH)   # write your computation
+    summarize(average.pH = mean(pH), # write your computation
+            stddev.pH = sd(pH)   # write your computation
              )
 ```
 
 ### Step 3: adding variables for the error-bars
 We are almost done preparing our data for the `ggplot()` we are designing. We still need to add information to the plotting data frame about where the error-bars start and stop.  Recall that `mutate(new_var = values)` will create new variables and add them to a data frame.  We want to add
 
-* `low`: a value for the lower end of our error-bar, created by taking `average_pH - 2*std.dev_pH`; and
-* `high`: a value for the lower end of our error-bar, created by taking `average_pH + 2*std.dev_pH`
+* `low`: a value for the lower end of our error-bar, created by taking `average.pH - 2*stddev.pH`; and
+* `high`: a value for the lower end of our error-bar, created by taking `average.pH + 2*stddev.pH`
 
 
 #### Exercise: adding `low` and `high` variables to our summary table.
@@ -276,16 +276,16 @@ Fill in the `mutate()` code below, which we added to our work from the previous 
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
     mutate(...)
 ```
 ```{r mutate-hint-1}
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
     mutate(low = ...,
            high = ...)
 ```
@@ -293,19 +293,19 @@ experiment %>%
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-    mutate(low = average_pH - 2*std.dev_pH,
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
+    mutate(low = average.pH - 2*stddev.pH,
            high = ...)
 ```
 ```{r mutate-solution}
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-    mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH)
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
+    mutate(low = average.pH - 2*stddev.pH,
+           high = average.pH + 2*stddev.pH)
 ```
 
 ### Amazing!
@@ -324,10 +324,10 @@ Before continuing, it helps to save the summary data frame we created for plotti
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-    mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH) -> plot_df
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
+    mutate(low = average.pH - 2*stddev.pH,
+           high = average.pH + 2*stddev.pH) -> plot_df
 ```
 
 ### Start the plot.
@@ -348,10 +348,10 @@ Complete the code below to link our plot to `plot_df`, and set the `x` and `y` a
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-    mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH) -> plot_df
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
+    mutate(low = average.pH - 2*stddev.pH,
+           high = average.pH + 2*stddev.pH) -> plot_df
 ```
 
 ```{r axes, exercise = TRUE, exercise.lines=4}
@@ -372,7 +372,7 @@ ggplot(data = plot_df,
 ```{r axes-solution}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH))
+           y = average.pH))
 ```
 
 ### Exercise: adding the first geometry
@@ -384,18 +384,18 @@ In this case, we will use `geom_col()` as our geometry.^[The `geom_bar()` geomet
 # add the geometry to the code below
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) 
+           y = average.pH)) 
 ```
 ```{r geom-bar-hint-1}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_...
 ```
 ```{r geom-bar-solution}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col()
 ```
 
@@ -422,27 +422,27 @@ This should add nice-looking error bars to our plot.
 # add the errobar geometry and the aesthetics
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col()
 ```
 ```{r error-bars-hint-1}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col()+
     geom_errorbar(aes(ymin=..., ymax =...), width = ...)
 ```
 ```{r error-bars-hint-2}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col()+
     geom_errorbar(aes(ymin=low, ymax =high), width = ...)
 ```
 ```{r error-bars-solution}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col()+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
@@ -457,21 +457,21 @@ Since the `fill` color will depend on the `Treatment` variable, this is a new ae
 # add the fill aesthetic to the code below
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes( ... ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
 ```{r geom-color-bar-hint-1}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes(fill= ... ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
 ```{r geom-color-bar-solution}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes(fill=Treatment))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
@@ -487,13 +487,13 @@ Here is our plot so far
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-    mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH) -> plot_df
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
+    mutate(low = average.pH - 2*stddev.pH,
+           high = average.pH + 2*stddev.pH) -> plot_df
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes(fill=Treatment))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
 ```
@@ -516,7 +516,7 @@ Let's take care of our labels and title first. Run the code below to see what it
 # add the fill aesthetic to the code below
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes( fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="new y axis")
@@ -525,7 +525,7 @@ ggplot(data = plot_df,
 ```{r labels-solution}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes( fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="Average pH")
@@ -549,7 +549,7 @@ For our last exercise, add the `scale_y_continuous(breaks=...)` code to the plot
 # add the fill aesthetic to the code below
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes( fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="Average pH")
@@ -557,7 +557,7 @@ ggplot(data = plot_df,
 ```{r scale-y-hint-1}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes(fill= fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="Average pH")+
@@ -566,7 +566,7 @@ ggplot(data = plot_df,
 ```{r scale-y-hint-2}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes(fill= fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="Average pH")+
@@ -575,7 +575,7 @@ ggplot(data = plot_df,
 ```{r scale-y-solution}
 ggplot(data = plot_df,
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes(fill=Treatment))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="Average pH")+
@@ -698,10 +698,10 @@ Change the name of the data frame to `plot_df2` and see if the $x$-axis now appe
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-    mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH) -> plot_df
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
+    mutate(low = average.pH - 2*stddev.pH,
+           high = average.pH + 2*stddev.pH) -> plot_df
 
 plot_df %>% mutate(Treatment = factor(Treatment,
                               levels = c("Control",
@@ -712,7 +712,7 @@ plot_df %>% mutate(Treatment = factor(Treatment,
 ```{r final-plot, exercise = TRUE, exercise.lines=9,exercise.setup="plot-df2"}
 ggplot(data = ...,  #<---- set the updated data frame!
        aes(x = Treatment,
-           y = average_pH)) +
+           y = average.pH)) +
     geom_col(aes(fill=Treatment))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="Average pH")+
@@ -766,20 +766,20 @@ experiment %>%
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
     group_by(Treatment) %>%
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
-     mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH) -> plot_df
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
+     mutate(low = average.pH - 2*stddev.pH,
+           high = average.pH + 2*stddev.pH) -> plot_df
            
 # Creating our plot
 g1<-ggplot(data = plot_df,     
-       aes(x = Treatment, y = average_pH))+
+       aes(x = Treatment, y = average.pH))+
     geom_col(aes(fill = Treatment))+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
     labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 g2<-ggplot(data = plot_df,     
-       aes(x = Treatment, y = average_pH))+
+       aes(x = Treatment, y = average.pH))+
     geom_col(aes(fill = Treatment),alpha = .6)+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
     labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
@@ -798,7 +798,7 @@ p3<-ggplot(data = exp2,
     scale_y_continuous(breaks = seq(0,7,by = 1))+theme_bw()
 
 p4<-ggplot(data = plot_df,     
-       aes(x = Treatment, y = average_pH))+
+       aes(x = Treatment, y = average.pH))+
     geom_errorbar(aes(ymin = low, ymax = high,color=Treatment), width = 0.5,linewidth=.7)+
     geom_point(aes(fill = Treatment),pch = 21,size=3)+
     labs(y="Average pH", title = "Confidence intervals only")+
@@ -865,13 +865,13 @@ experiment %>%
     group_by(Treatment) %>%
     
     # Now we make our summaries, mean and std. deviation
-    summarize(average_pH = mean(pH),
-            std.dev_pH = sd(pH)) %>%
+    summarize(average.pH = mean(pH),
+            stddev.pH = sd(pH)) %>%
             
     # We need to add two new variables to control the 
     # start and stop heights of our error-bars.
-    mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH,
+    mutate(low = average.pH - 2*stddev.pH,
+           high = average.pH + 2*stddev.pH,
            
            # Modify Treatment to put the levels in the 
            # desired order.
@@ -887,7 +887,7 @@ experiment %>%
 # Creating our plot
 ggplot(data = plot_df,      # link to our plotting data
        # set our axis aesthetics
-       aes(x = Treatment, y = average_pH))+
+       aes(x = Treatment, y = average.pH))+
        
     # add the column geometry for the bars, 
     # the fill aesthetic chooses a new color for each 
