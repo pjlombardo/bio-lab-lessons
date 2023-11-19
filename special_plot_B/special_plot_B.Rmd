@@ -31,7 +31,7 @@ li{
 ```
 
 ## Understanding the experiment
-In this lesson, we will learn how to create an important plot for visualizing the progression in a mean measurement across time for several groups.  To best understand the visual, we should understand the underlying experiment.  The data, and the description below, were generously provided by Dr. Grace Kwan.
+In this lesson, we will learn how to create an important plot for visualizing the changes in an average measurement across time for several groups.  To best understand the visual, we should understand the underlying experiment.  The data, and the description below, were generously provided by Dr. Grace Kwan.
 
 #### Background
 
@@ -45,7 +45,7 @@ In this lesson, we will learn how to create an important plot for visualizing th
 The experiment monitored several lettuce leaves within each treatment class:
 
 * Three control leaves without bacteria (`Control`)
-* Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
+* Nine leaves inoculated with wild-type P. carotovorum (`wildtype`), and
 * Nine leaves inoculated with $\Delta$budB mutant (`budB`).
 
 At 20, 50, and 100 hours, disease progression was monitored as the length of the soft rot area in millimeters (`Lesion.mm`).
@@ -88,7 +88,7 @@ When in doubt, you can always use the "Import Dataset" button in the upper-right
 ***
 
 
-Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower right to see more rows of the data.
+Run the code block below to become familiar with the data and its format.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower right to see more rows of the data.
 ```{r explore-p1, exercise = TRUE, exercise.lines=3}
 experiment
 ```
@@ -109,7 +109,7 @@ question("We are primarily interested in how the length of the soft rot area cha
 ```
 
 ### Great work so far!
-Now that we are acquainted (or re-acquainted) with the data, we can turn to the task at hand.  We want to visualize how the average lesion length for each treatment group changes over time.  In addition, we wish to have our visual convey a sense the variation we saw *within* the groups at different times. 
+Now that we are acquainted (or re-acquainted) with the data, we can turn to the task at hand.  We want to visualize how the average lesion length for each treatment group changes over time.  In addition, we wish to have our visual convey a sense the variation we saw *within* each group at different times. 
 
 In the next section, we will present a common plot for accomplishing the goals above, and then spend the rest of the lesson learning how to make this plot using `dplyr` and `ggplot2` in R!
 
@@ -139,12 +139,12 @@ Getting started with the aesthetics is easiest because our axes will always be p
     * Notice the spacing of the $x$-axis; specifically, `20` and `50` are close, and there is a larger distance to the value of `100`.  This is a visual cue that the plot is considering these as *numeric* values, rather than groups.^[When using a grouping variable as the `x` aesthetic, the groups are *evenly space* on the $x$-axis.]  
     * We will use `TimeValue`, the numeric variable measuring time, as our $x$-axis aesthetic. 
 * `y`: The $y$-axis is also tricky. Notice the $y$-axis is labeled with ***average*** Lesion Length.  Average lesion length is related to, *but not the same as* the `Lesion.mm` measurement. 
-
-> **Important Idea:** Because the `y` aesthetic reports the average (or mean) of `Lesion.mm`, we will need to use a data frame that has contains this average as a variable for each treatment group *and at each time point*.
+    * **Important Idea:** Because the `y` aesthetic reports the average (or mean) of `Lesion.mm`, we will need to use a data frame that has contains this average as a variable for each treatment group *and at each time point*.
 
 * `color`: The point-line elements in the plot are organized by color, which depends on `Treatment`.  This will also need to be an aesthetic because it depends on data.
 
-We can do this by grouping and summarizing our `experiment` data frame, but before we jump to this let's continue planning our plot.
+
+We can create a plotting data frame by grouping and summarizing our `experiment` data frame, but before we jump to this let's continue planning our plot.
 
 ### Geometries
 Notice that the "content" (loosely speaking, the drawing in the middle of the plot) consists of
@@ -153,7 +153,7 @@ Notice that the "content" (loosely speaking, the drawing in the middle of the pl
 * **lines**, which connect the average lesion lengths. (`geom_line()`)
 * **error-bars**, which give us a sense of the variation *within* the `Treatment` groups at each time point. (`geom_errorbar()`)
 
-To correctly plot the `geom_errorbar()`, our data frame needs to include have to include the following for each group *and each time point*:
+To correctly plot the error-bars, our data frame needs to include additional aesthetics for the `geom_errobar()` geometry. Specifically, we need the following for each group *and each time point*:
 
 * `ymin`: the value for the lowest part of the error bar,
 * `ymax`: the value for the upper part where the error bar stops.
@@ -165,17 +165,15 @@ Hopefully, the recipe for constructing this plot is starting to take form.  In t
 
 1. Prepare a data frame from `experiment` that has the information we need to create the plot; we'll call it `plot_df`.
 2. Use `plot_df` to set up the axes, and then plot the lines and points.
-3. Finish with the error-bars and add some final touches (like labels and titles). 
+3. Finish with the error-bars and add some final touches. 
 
 Let's go!
-
-
 
 
 ## Preparing a plotting data frame {data-progressive=TRUE}
 Having understood and processed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
 
-1. Because our $y$-axis aesthetic will present averages, we will need find the mean lesion length for each of our treatment groups.  Hence, we will `group_by()` the `Treatment` variable, and then `summarize()` to compute the mean `Lesion.mm`.
+1. Because our $y$-axis aesthetic will present averages, we will need compute the mean lesion length for each of our treatment groups.  Hence, we will `group_by()` the `Treatment` variable, and then `summarize()` to compute the mean `Lesion.mm`.
 2. Because our $x$-axis aesthetic involves multiple time points, we will actually need the summaries described in (1) above *for each time point as well*: 20, 50, and 100 hours.  We can accomplish this by also including `TimeValue` in the `group_by()` function.
 3. To create the error-bars in the plot, we need to add columns to the data frame which specify where the error bars will start and stop. The `mutate()` function allows us to add columns of new computations to the data frame. We will use the following formula to determine where the error-bars start and stop: `mean` $\pm$ `2*std.dev`.
 
@@ -195,13 +193,12 @@ With this in mind, our plotting data frame should have four variables:
 
 * `Treatment`: indicating the treatment group for that row
 * `TimeValue`: indicating the time point for that row
-
-(*Note:* there will be enough rows to cover each treatment group at each of the time points)
-
 * `average.Lesion.mm`: measuring the average lesion length at that time point for the given treatment group.
 * `stddev.Lesion.mm`: measuring the standard deviation of the lesion lengths at that time point for the given treatment group.
 * `low`: the lower limit of a confidence interval (`mean - 2*std.dev`), which we will use for the start of our error bars; again, this is associated to a specific group at a specific time.
 * `high`: the upper limit of a confidence interval (`mean + 2*std.dev`), which we will use for the end of our error bars; again, this is associated to a specific group at a specific time.
+
+*Note:* there will be enough rows to cover each treatment group at each of the time points.
 
 ### Step 1: grouping and summarizing
 We can begin creating the summary data we need to for our plot.  Since we want to compute summaries for each `Treatment` group at each `TimeValue`, we need to
@@ -212,7 +209,9 @@ We can begin creating the summary data we need to for our plot.  Since we want t
 In particular, we will need the `mean()` function and the `sd()` function to compute the mean and standard deviation of the `Lesion.mm` variable.
 
 #### Exercise: summary statistics for lesion length
-Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.  Use the following names for these variables: `average.Lesion.mm` and `stddev.Lesion.mm`.
+Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.  
+
+Use the following names for these variables: `average.Lesion.mm` and `stddev.Lesion.mm`.
 
 ```{r group-by, exercise = TRUE, exercise.lines=6,message=FALSE}
 experiment %>% 
@@ -246,8 +245,6 @@ We are almost done preparing our data for the `ggplot()` we are designing. Our l
 
 * `low`: a value for the lower end of our error-bar, created by taking `average.Lesion.mm - 2*stddev.Lesion.mm`; and
 * `high`: a value for the lower end of our error-bar, created by taking `average.Lesion.mm - 2*stddev.Lesion.mm`
-
-(*Note:* Make a footnote that mean - 2*stdev approximates a 95\% confidence interval well enough in most cases to not make a visual difference to the actual confidence.)
 
 #### Exercise: adding `low` and `high` variables to our summary table.
 Fill in the `mutate()` code below, which we added to our work from the previous two sections.
@@ -351,10 +348,6 @@ Now that the axes are set up, we can add our first geometries.  Remember that th
 
 In this case, we will use `geom_point()` and `geom_line()` as our geometries. Add both of them to the code below!
 
-(*Note*: you will get a plot, but not the one that you want! Don't panic :))
-
-***NOTE WHEN WE USE A QUANTITATIVE VARIABLE, THIS WORKS FINE.  WE NEED THE GROUP AESTHETIC WHEN `x` IS A CATEGORICAL VARIABLE***
-
 ```{r geoms, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
 # add the geometry to the code below
 ggplot(data = plot_df,
@@ -388,40 +381,64 @@ ggplot(data = plot_df,
     
 ```
 
-### One more aesthetic to fix the problem
-The previous plot ***was wrong!*** (Gasp!).
+<details>
+<summary> $\blacktriangleright$
+Optional note on categorical $x$-axis variables</summary>
+If our $x$-axis aesthetic were a categorical variable, like say `TimeGroup`, we would have to approach the aesthetics a little differently.  In this case, we would need a second aesthetics called `group` also set to `Treatment`.
 
-Yes. This happens ***all the time*** when you are coding. That's why we build things incrementally; so we can error check and correct as we go.
-
-Even though we added `geom_line()`, the plot did not contain any lines.  However, notice that we got an error message in return:
-
->**Error message:** `geom_line()`: Each group consists of only one observation. Do you need to adjust the group aesthetic?
-
-What's the group aesthetic? Well, those that would like to read the [documentation for geom_line()](https://ggplot2.tidyverse.org/reference/geom_path.html) are welcome, but we will give you the quick answer. 
-
-To get `geom_line()` to connect dots in the same **group**, we need to add `group = ...` as an aesthetic to our plot.
-
-#### Exercise: connecting the dots
-Add the group aesthetic to the code below, and see how it fixes our plot! Remember, we want to plot the lines based on the `Treatment` group.
-```{r geoms-fixed, exercise = TRUE, exercise.lines=9, exercise.setup="axes-setup"}
-# add the group aesthetic to the code below
-ggplot(data = plot_df,
-       aes(x = TimeValue,
-           y = average.Lesion.mm,
-           color = Treatment,
-           group = ...))+
-    geom_point() + 
-    geom_line()
+Here is code that would work; notice we need to recreate a new plotting data frame that used `TimeGroup`:
 ```
-```{r geoms-fixed-solution}
-ggplot(data = plot_df,
-       aes(x = TimeValue,
+experiment %>% group_by(Treatment, TimeGroup) %>%
+    summarize(average.Lesion.mm = mean(Lesion.mm), 
+            stddev.Lesion.mm = sd(Lesion.mm)) %>%
+    mutate(low = average.Lesion.mm - 2*stddev.Lesion.mm,
+           high = average.Lesion.mm + 2*stddev.Lesion.mm) -> alt_plot_df
+           
+ggplot(data = alt_plot_df,
+       aes(x = TimeGroup,
            y = average.Lesion.mm,
            color = Treatment,
+           # Here is the extra aesthetic we need
            group = Treatment))+
     geom_point() + 
     geom_line()
 ```
+</details>
+
+<!-- ### One more aesthetic to fix the problem -->
+<!-- The previous plot ***was wrong!*** (Gasp!). -->
+
+<!-- Yes. This happens ***all the time*** when you are coding. That's why we build things incrementally; so we can error check and correct as we go. -->
+
+<!-- Even though we added `geom_line()`, the plot did not contain any lines.  However, notice that we got an error message in return: -->
+
+<!-- >**Error message:** `geom_line()`: Each group consists of only one observation. Do you need to adjust the group aesthetic? -->
+
+<!-- What's the group aesthetic? Well, those that would like to read the [documentation for geom_line()](https://ggplot2.tidyverse.org/reference/geom_path.html) are welcome, but we will give you the quick answer.  -->
+
+<!-- To get `geom_line()` to connect dots in the same **group**, we need to add `group = ...` as an aesthetic to our plot. -->
+
+<!-- #### Exercise: connecting the dots -->
+<!-- Add the group aesthetic to the code below, and see how it fixes our plot! Remember, we want to plot the lines based on the `Treatment` group. -->
+<!-- ```{r geoms-fixed, exercise = TRUE, exercise.lines=9, exercise.setup="axes-setup"} -->
+<!-- # add the group aesthetic to the code below -->
+<!-- ggplot(data = plot_df, -->
+<!--        aes(x = TimeValue, -->
+<!--            y = average.Lesion.mm, -->
+<!--            color = Treatment, -->
+<!--            group = ...))+ -->
+<!--     geom_point() +  -->
+<!--     geom_line() -->
+<!-- ``` -->
+<!-- ```{r geoms-fixed-solution} -->
+<!-- ggplot(data = plot_df, -->
+<!--        aes(x = TimeValue, -->
+<!--            y = average.Lesion.mm, -->
+<!--            color = Treatment, -->
+<!--            group = Treatment))+ -->
+<!--     geom_point() +  -->
+<!--     geom_line() -->
+<!-- ``` -->
 
 
 ### Adding error-bars
@@ -438,7 +455,7 @@ We will also adjust the *width* of the error bars, because the default width is 
 Add `geom_errobar(aes(...), width = ...)` to the plot below, and 
 
 * assign the `ymin` and `ymax` aesthetics to the variables `low` and `high`, respectively; and
-* provide a value of 0.1 for the width.
+* provide a value of 2 for the width.
 
 This should add nice-looking error bars to our plot.
 
@@ -507,24 +524,22 @@ ggplot(data = plot_df,
            color = Treatment,
            group = Treatment))+
     geom_point() + geom_line()+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
+    geom_errorbar(aes(ymin=low, ymax =high), width = 2)
 ```
 
 We want to make a few modifications:
 
-1. We want better axis labels and a title; specifically, we want 
-    * the $y$-axis to be "Average Lesion Length (mm)" and 
-    * a title of "Rot lesion length as a function of time for three treatment groups".
+1. We want better axis labels; specifically, we want the $x$-axis to be "Time (hrs)" and the $y$-axis to be "Average Lesion Length (mm)".
+    * *Note*: figures in science publications do not use titles.
     
 2. The error-bars overlap, making it some of them hard to see. If we make them slightly transparent, we might be better able to track where there is overlap. (We supply more options in the conclusion.)
 
 3. The gray background also makes it difficult to see the error-bars, so we want to make the background white.
 
-The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second requires adjusting the `alpha` value inside the error-bar geometry. The third we can accomplish very quickly by adding a "theme".
+The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y`.  The second requires adjusting the `alpha` value inside the error-bar geometry. The third we can accomplish very quickly by adding a "theme".
 
-### Adding axis labels and a title
-(*Note*: Do not add a title, not done in science.)
-Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
+### Changing an axis label 
+Run the code below to see what it does, and then modify the code to provide the appropriate label of "Average Lesion Length (mm)".
 ```{r labels, exercise = TRUE, exercise.lines=10, exercise.setup="axes-setup"}
 # add labs() below to change the axis labels
 ggplot(data = plot_df,
@@ -533,18 +548,9 @@ ggplot(data = plot_df,
            color = Treatment,
            group = Treatment))+
     geom_point() + geom_line()+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)
-```
-```{r labels-hint-1}
-ggplot(data = plot_df,
-       aes(x = TimeValue,
-           y = average.Lesion.mm,
-           color = Treatment,
-           group = Treatment))+
-    geom_point() + geom_line()+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average Lesion Length (mm)", 
-         title = "...")
+    geom_errorbar(aes(ymin=low, ymax =high), width = 2)+
+    labs(x = "new x label",
+         y = "new y axis label")
 ```
 ```{r labels-solution}
 ggplot(data = plot_df,
@@ -553,10 +559,11 @@ ggplot(data = plot_df,
            color = Treatment,
            group = Treatment))+
     geom_point() + geom_line()+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average Lesion Length (mm)", 
-         title = "Rot lesion length as a function of time for three treatment groups")
+    geom_errorbar(aes(ymin=low, ymax =high), width = 2)+
+    labs(x = "Time (hrs)",
+         y="Average Lesion Length (mm)")
 ```
+
 
 ### Backgrounds and errorbars
 In general, the `alpha = ...` setting inside a geometry will control the transparency of the `fill` or `color` aesthetic associated to the geometry. Values close to zero (like 0.1) are very see-through; whereas values close to 1 (like 0.9) are opaque.
@@ -564,7 +571,7 @@ In general, the `alpha = ...` setting inside a geometry will control the transpa
 #### Exercise: transparent error-bars and white background
 To help us see the error-bar overlaps, let's make the transparency about 0.5. Set this parameter inside the error-bar geometry, but not in the `aes()` part.
 
-```{r scale-y, exercise = TRUE, exercise.lines=11, exercise.setup="axes-setup"}
+```{r scale-y, exercise = TRUE, exercise.lines=13, exercise.setup="axes-setup"}
 # add the fill aesthetic to the code below
 ggplot(data = plot_df,
        aes(x = TimeValue,
@@ -572,22 +579,10 @@ ggplot(data = plot_df,
            color = Treatment,
            group = Treatment))+
     geom_point() + geom_line()+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average Lesion Length (mm)", 
-         title = "Rot lesion length as a function of time for three treatment groups")+
-    theme_bw()
-```
-```{r scale-y-hint-1}
-ggplot(data = plot_df,
-       aes(x = TimeValue,
-           y = average.Lesion.mm,
-           color = Treatment,
-           group = Treatment))+
-    geom_point() + geom_line()+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+    geom_errorbar(aes(ymin=low, ymax =high), width = 2,
                   alpha = ...)+
-    labs(y="Average Lesion Length (mm)", 
-         title = "Rot lesion length as a function of time for three treatment groups")+
+    labs(x = "Time (hrs)",
+         y="Average Lesion Length (mm)")+
     theme_bw()
 ```
 ```{r scale-y-solution}
@@ -597,10 +592,10 @@ ggplot(data = plot_df,
            color = Treatment,
            group = Treatment))+
     geom_point() + geom_line()+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
+    geom_errorbar(aes(ymin=low, ymax =high), width = 2,
                   alpha = 0.3)+
-    labs(y="Average Lesion Length (mm)", 
-         title = "Rot lesion length as a function of time for three treatment groups")+
+    labs(x = "Time (hrs)",
+         y="Average Lesion Length (mm)")+
     theme_bw()
 ```
 **Quick notes:**
@@ -665,8 +660,8 @@ p1<-ggplot(data = plot_df,
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   alpha = .5)+
     theme_bw()+
-    labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups")
+    labs(x = "Time (hrs)",
+         y="Average Lesion Length (mm)")
 
 
 #Drop this plot
@@ -692,7 +687,9 @@ p2<-ggplot(data = plot_df,
     geom_errorbar(aes(ymin=low, ymax =high), width = 2,
                   alpha = .5, position=position_dodge(width=3))+
     theme_classic()+
-    labs(y="Average Lesion Length (mm)",
+
+    labs(x = "Time (hrs)",
+         y="Average Lesion Length (mm)",
          title = "Point, line, and error-bars \"dodged\" to avoid overlap")
 
 p4<-ggplot(data = plot_df,
@@ -711,7 +708,8 @@ p4<-ggplot(data = plot_df,
     # geom_errorbar(aes(ymin=low, ymax =high), width = 0.1,
                   # alpha = .5)+
     theme_bw()+
-    labs(y="Average Lesion Length (mm)",
+    labs(x = "Time (hrs)",
+         y="Average Lesion Length (mm)",
          title = "Means plotted as diamonds, overlayed with data.")
 
 # # Work on it
@@ -761,7 +759,7 @@ ggplot(data = .,
                   # alpha = .5)+
     facet_grid(cols=vars(Treatment))+
     theme_bw()+
-    labs(y="Lesion Length (mm)",
+    labs(x = "Time (hrs)",y="Lesion Length (mm)",
          title = "Boxplots with data overlayed")
 
 
@@ -813,10 +811,7 @@ ggplot(data = plot_df,      # link to the data frame plot_df
            y = average.Lesion.mm,
            # The color aesthetic is for the point geometry,
            # each treatment group gets a unique color
-           color = Treatment,
-           # The group aesthetic is for the line geometry,
-           # the lines will connect each treatment group
-           group = Treatment))+
+           color = Treatment))+
            
     # With our aesthetics set, we add the point and line geometries.
     geom_point() + geom_line()+
@@ -828,8 +823,8 @@ ggplot(data = plot_df,      # link to the data frame plot_df
                   alpha = .5)+
                   
     # Here we add better labels to our axes
-    labs(y="Average Lesion Length (mm)",
-         title = "Rot lesion length as a function of time for three treatment groups") +
+    labs(x = "Time (hrs)",
+         y="Average Lesion Length (mm)") +
          
     # And to finish, a theme with a white background to make
     # the error bars easier to see.
