@@ -13,6 +13,12 @@ library(tidyr)
 # library(patchwork)
 knitr::opts_chunk$set(echo = FALSE)
 experiment <- read.csv('data/experiment_data.csv', header = T)
+set.seed(123)
+choose_month<-function(y){
+    x<-runif(1,0,1)
+    if (x <.2){return("Jan")} else if (x < .7) {return("Feb")} else {return("Mar")}
+}
+birthdays<-sapply(1:15,FUN=choose_month)
 ```
 
 ```{css, echo=FALSE}
@@ -30,7 +36,7 @@ li{
 ```
 
 ## Understanding the experimental data
-In this lesson, we will learn how to create an important plot for visualizing differences in an mean measurement across several groups.  To best understand the visual, we should understand the underlying experiment.  The data, and the description below, were generously provided by Dr. Grace Kwan.
+In this lesson, we will learn how to create an important plot for visualizing differences in a mean measurement across several groups.  In order to create the visual, we need to understand the underlying experiment.  The data, and the description below, were generously provided by Dr. Grace Kwan.
 
 #### Background
 
@@ -43,9 +49,9 @@ In this lesson, we will learn how to create an important plot for visualizing di
 ### Experiment details
 The experiment monitored several lettuce leaves within each treatment class:
 
-* Three control leaves without bacteria (`Control`)
-* Nine leaves inoculated with wild-type P. carotovorum (`Wild`), and
-* Nine leaves inoculated with $\Delta$budB mutant (`budB`).
+* Three control leaves without bacteria (`"Control"`)
+* Nine leaves inoculated with wild-type P. carotovorum (`"wildtype"`), and
+* Nine leaves inoculated with $\Delta$budB mutant (`"budB"`).
 
 At 20, 50, and 100 hours, disease progression was monitored as the size of the soft rot area. At the conclusion of the experiment, 100 hrs, the soft rotted tissue was mashed up to evaluate the pH.
 
@@ -87,7 +93,7 @@ When in doubt, you can always use the "Import Dataset" button in the upper-right
 
 ***
 
-Run the code block below to become familiar with the data, as well as the format of the data.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower left to see more rows of the data.
+Run the code block below to become familiar with the data and its format.  We store the information in the `experiment` data frame. Remember you can use "Next" button in the lower right to see more rows of the data.
 ```{r explore-p1, exercise = TRUE, exercise.lines=3}
 experiment
 ```
@@ -123,7 +129,7 @@ question_text(
 
 
 ### Great work so far!
-Now that we are acquainted (or re-acquainted) with the data, we can turn to the task at hand.  We want to visualize the average `pH` of the lettuce leaves at the end of our experiment, but we want to break the leaves into groups by the `Treatment` variable.  In addition, we wish to have our visual convey a sense the variation we saw *within* the groups. 
+Now that we are acquainted (or re-acquainted) with the data, we can turn to the task at hand.  We want to visualize the average `pH` of the lettuce leaves at the end of our experiment, but we want to break the leaves into groups by the `Treatment` variable.  In addition, we wish to have our visual convey a sense the variation we saw *within* each group. 
 
 In the next section, we will present a common plot for accomplishing the goals above, and then spend the rest of the lesson learning how to make this plot using `dplyr` and `ggplot2` in R!
 
@@ -147,7 +153,7 @@ To translate a plot into `ggplot()` code, we start by considering two questions:
 ### Aesthetics
 Getting started with the aesthetics is easiest because our axes will always be part of the aesthetics. Looking at how the axes are labeled, we can surmise:
 
-* `x`: The $x$-axis aesthetic will be our `Treatment` variable, because our group classifications appear as the labels along the axis.
+* `x`: The $x$-axis aesthetic will be our `Treatment` variable, because our group classifications appear as the labels along the axis (`"wildtyp"`, `"budB"`, `"Control"`).
 * `y`: The $y$-axis aesthetic is trickier.  Notice it is labeled with ***average*** `pH`.  Average pH is related to, *but not the same as* the `pH` measurement. 
 
 > **Important Idea:** Because the `y` aesthetic reports the average (or mean) pH, we will need to use a data frame that has the average pH per group as a variable (or column).
@@ -160,12 +166,12 @@ Notice that the "content" (loosely speaking, the drawing in the middle of the pl
 * bars (or columns), which represent the average pH. (`geom_bar()` or `geom_col()`)
 * error-bars, which give us a sense of the variation *within* the `Treatment` groups. (`geom_errorbar()`)
 
-To correctly plot the `geom_errorbar()`, our data frame would have to include the following for each group:
+To correctly plot the `geom_errorbar()`, our data frame will have to include the following *aesthetics* for each group:
 
 * `ymin`: the value for the lowest part of the error bar,
 * `ymax`: the value for the upper part where the error bar stops.
 
-To determine the start and stop values of the error-bars, we will use a (mean $\pm$ 2*std.dev) approach to determine these values.^[This is inspired by confidence intervals for the population mean based on a sample mean, but the results are unofficial.]
+<!-- To determine the start and stop values of the error-bars, we will use a (mean $\pm$ 2*std.dev) approach to determine these values.^[This is inspired by confidence intervals for the population mean based on a sample mean, but the results are unofficial.] -->
 
 ### Keep on going!
 Hopefully, the recipe for constructing this plot is starting to take form.  In the remaining sections, we will
@@ -182,9 +188,9 @@ Ready to get plotting?
 ## Preparing a plotting data frame {data-progressive=TRUE}
 Having surveyed the plot we want to build, we can now describe the data frame we would need to use for plotting.  Make sure each of the requirements below make sense to you!
 
-1. Since we are dealing with `pH`, which was only measured at the end of the experiment, we need to `filter()` to only keep rows where `TimeGroup` equals "100hr".
-2. Because we want to display the average (mean) pH for each group, we need to take the data and `group_by()` the `Treatment` variable then `summarize()` the data for each Treatment group to calculate the mean `pH`.
-3. We will also need to add columns (using `mutate()`) for where the error bars will start and stop: `mean` $\pm$ `2*std.dev`.
+1. Since we are dealing with `pH`, which was only measured at the end of the experiment, we only want to include rows where `TimeGroup` equals `"100hr"`. We will use the `filter()` function to accomplish this.
+2. Because we want to display the average (mean) pH for each group, we will need find the mean pH for each treatment group. Hence, we will `group_by()` the `Treatment` variable and then `summarize()` to calculate the mean `pH`.
+3. To create the error-bars in the plot, we need to add columns to the data frame which specify where the error bars will start and stop. The `mutate()` function allows us to add columns of new computations to the data frame. We will use the following formula to determine where the error-bars start and stop: `mean` $\pm$ `2*std.dev`.
 
 <details>
 <summary> $\blacktriangleright$ A note on the error-bar formula `mean` $\pm$ `2*std.dev`.</summary>
@@ -196,7 +202,7 @@ For this plotting exercise, we are using `mean` $\pm$ `2*std.dev` for our error-
 </details>
 
 ### Step 1: filtering
-Recall that we only want rows where `TimeGroup` equals (`==`) the "100hr" mark.  Use the code chunk below, with the `filter` command, to do this and check your work by sifting through the data frame.
+Recall that we only want rows where `TimeGroup` equals (`==`) the `"100hr"` mark.  Use the code chunk below, with the `filter` command, to do this and check your work by sifting through the data frame.
 ```{r filter, exercise = TRUE, exercise.lines=3}
 experiment %>%
     filter(...)
@@ -216,15 +222,17 @@ experiment %>%
 
 
 ### Step 2: summarizing by group
-Now that we have filtered our data frame, we can begin creating the summary data we need to create our plot.  Since we want to compute summaries for each `Treatment` group, we need to
+Now that we have filtered our data frame, we can begin making  the summary data frame that we need to create our plot (`plot_df`).  Since we want to compute summaries for each `Treatment` group, we need to
 
-1. Take our data frame and `group_by()` the `Treatment` variable, then
+1. Take our `experiment` data frame and `group_by()` the `Treatment` variable, then
 2. `summarize()` the appropriate variable (`pH`) using `R` functions
 
-In particular, we will need the `mean()` function and the `sd()` function to compute the mean and standard deviation of the `pH` variable.
+We first need the `mean()` function and the `sd()` function to compute the mean and standard deviation of the `pH` variable.
 
 #### Exercise: summary statistics for pH
-Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.  Use the following names for these variables: `average_pH` and `std.dev_pH`.
+Build on the `dplyr` pipe that filters the data frame. Add the appropriate `group_by()` and `summarize()` code to create the summary measurements described above.  
+
+Use the following names for these summary variables: `average_pH` and `std.dev_pH`.
 
 ```{r group-by, exercise = TRUE, exercise.lines=6}
 experiment %>% 
@@ -256,12 +264,10 @@ experiment %>%
 ```
 
 ### Step 3: adding variables for the error-bars
-We are almost done preparing our data for the `ggplot()` we are designing. Our last task is to add to our data frame of summary statistics (mean and std. deviation).  Recall that `mutate(new_var = values)` is our method for creating new variables.  Specifically, we want to add
+We are almost done preparing our data for the `ggplot()` we are designing. We still need to add information to the plotting data frame about where the error-bars start and stop.  Recall that `mutate(new_var = values)` will create new variables and add them to a data frame.  We want to add
 
 * `low`: a value for the lower end of our error-bar, created by taking `average_pH - 2*std.dev_pH`; and
 * `high`: a value for the lower end of our error-bar, created by taking `average_pH + 2*std.dev_pH`
-
-(*Note:* Make a footnote that mean - 2*stdev approximates a 95\% confidence interval well enough in most cases to not make a visual difference to the actual confidence.)
 
 
 #### Exercise: adding `low` and `high` variables to our summary table.
@@ -336,7 +342,8 @@ where
 * `aes()` sets our global aesthetics^[By "global aesthetics," we mean aesthetics that will apply to all the geometries we use.], like `x` for our $x$-axis and `y` for our $y$-axis, and potentially more.
 
 #### Exercise: setting up axes.
-Complete the code below to link our plot to `plot_df`, and set the `x` and `y` aesthetics.  Remember we want the treatment group on the $x$-axis and the average pH on the $y$-axis.
+Complete the code below to link our plot to `plot_df`, and set the `x` and `y` aesthetics.  Remember we want the treatment group on the $x$-axis and the average pH on the $y$-axis.^[In science, it is convention for your independent variable to be on the $x$-axis, and the dependent variable to appear on the $y$-axis.]
+
 ```{r axes-setup, include = FALSE}
 experiment %>% 
     filter(TimeGroup=="100hr") %>%
@@ -371,7 +378,7 @@ ggplot(data = plot_df,
 ### Exercise: adding the first geometry
 Now that the axes are set up, we can add our first geometry.  Remember that the bars in our sketch reflected the average pH of each Treatment group. Our $x$ and $y$ aesthetics are already set up, so we simply need to add the geometry.
 
-In this case, we will use `geom_col()` as our geometry.^[The `geom_bar()` geometry also creates a bar plot, but it is designed specifically to work with categorical data and do aggregation automatically so that you do not need to summarize before sending the data to the ggplot commands.] Add the code below!
+In this case, we will use `geom_col()` as our geometry.^[The `geom_bar()` geometry also creates a bar plot, but it is designed specifically to work with categorical data and do aggregation automatically.] Add the code below!
 
 ```{r geom-bar, exercise = TRUE, exercise.lines=5, exercise.setup="axes-setup"}
 # add the geometry to the code below
@@ -393,14 +400,15 @@ ggplot(data = plot_df,
 ```
 
 ### Adding error-bars
-To show the variation within each treatment group, let's add the error-bars as prescribed by our `low` and `high` variables in `plot_df`. (Remember these represent (mean $\pm$ 2*std.dev) for the measurements within each group.)
+To show the variation within each treatment group, let's add the error-bars as prescribed by our `low` and `high` variables in `plot_df`. 
+<!-- (Remember these represent (mean $\pm$ 2*std.dev) for the measurements within each group.) -->
 
-The `geom_errorbar()` geometry requires some new aesthetics to work.  Since we have already set `x` when we created our axes, we need only specify two additional aesthetics to control where the error bars start and stop.  
+The `geom_errorbar()` geometry requires some new aesthetics.  Since we have already set `x` when we created our axes, we need only specify two additional aesthetics to control where the error bars start and stop:  
 
 * `ymin`: determines the bottom of the error bar (we will use `low` from `plot_df`)
 * `ymax`: determines the top of the error bar (we will use `high` from `plot_df`)
 
-We will also adjust the *width* of the error bars, because the default width is not good.  We do this by adding `width = ...` outside of the aesthetics, but still inside the error-bar geometry.
+We will also adjust the *width* of the error bars, because the default width is not always good.  We do this by adding `width = ...` outside of the aesthetics, but still inside the error-bar geometry.
 
 #### Exercise. 
 Add `geom_errobar(aes(...), width = ...)` to the plot below, and 
@@ -469,13 +477,11 @@ ggplot(data = plot_df,
 ```
 
 #### Great work!
-We have an excellent working plot right now, and it looks even better than your co-author's drawing (no offense). There are a few tweaks, however, that might make it better.  In the last section, we demonstrate some finishing touches!
-
-Ready to wrap it up?
+We have an excellent working plot right now, and it looks even better than your co-author's drawing (no offense). There are a few tweaks, however, that might make it better.  In the last two sections, we apply some finishing touches!
 
 
 
-## Finalizing the plot {data-progressive=TRUE}
+## Minor modifications {data-progressive=TRUE}
 Here is our plot so far
 ```{r fig.align='center',fig.width=5,fig.height=2.5}
 experiment %>% 
@@ -494,16 +500,16 @@ ggplot(data = plot_df,
 
 We want to make three modifications:
 
-1. We want better axis labels and a title; specifically, we want 
-    * the $y$-axis to be "Average pH" and 
-    * a title of "Leaf pH at 100 hours by Treatment."
-2. We want the $y$-axis to have markings for every unit of pH (i.e., it should be labeled 0, 1, 2, ...7).
-3. We want to re-order the Treatment groups on the $x$-axis to ... ***Prescription here***
+1. We want better axis labels; specifically, we want the $y$-axis to be "Average pH". 
+    * *Note:* figures in scientific reports do not have titles.
+2. We want the $y$-axis to have markings for the first 8 units of pH (i.e., it should be labeled 0, 1, 2, ...7).
+3. We want to re-order the Treatment groups on the $x$-axis so that `"Control"` appears first, followed by `"wildtype"` and then `"budB"`.
 
-The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y` and `title`.  The second, involves *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale.
+The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y`.  The second, involves *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale. 
 
-### Adding axis labels and a title
-(*Note*: Do not add a title, not done in science.)
+Our third modification is the most involved, but we will walk through it in our final section.
+
+### Changing axis labels
 
 Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
 ```{r labels, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
@@ -513,25 +519,18 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes( fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="new y axis", title = "this is on top")
+    labs(y="new y axis")
 ```
 
-```{r labels-hint-1}
-ggplot(data = plot_df,
-       aes(x = Treatment,
-           y = average_pH)) +
-    geom_col(aes( fill=Treatment ))+
-    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "...")
-```
 ```{r labels-solution}
 ggplot(data = plot_df,
        aes(x = Treatment,
            y = average_pH)) +
     geom_col(aes( fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")
+    labs(y="Average pH")
 ```
+
 
 ### Scaling the $y$-axis
 When scaling a continuous aesthetic, like `y` which records pH, we use the following
@@ -553,7 +552,7 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes( fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")
+    labs(y="Average pH")
 ```
 ```{r scale-y-hint-1}
 ggplot(data = plot_df,
@@ -561,7 +560,7 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes(fill= fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
+    labs(y="Average pH")+
     scale_y_continuous(breaks = ...)
 ```
 ```{r scale-y-hint-2}
@@ -570,7 +569,7 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes(fill= fill=Treatment ))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
+    labs(y="Average pH")+
     scale_y_continuous(breaks = seq(...))
 ```
 ```{r scale-y-solution}
@@ -579,16 +578,151 @@ ggplot(data = plot_df,
            y = average_pH)) +
     geom_col(aes(fill=Treatment))+
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
+    labs(y="Average pH")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 ```
 
-### Add something how to re-order the levels of the $x$-axis
-using `fct_relevel()`, or using `arrange()`.
+#### Keep at it!
+We're almost done. In our final section, we learn how to adjust the order of our $x$-axis labels! 
+
+## Re-ordering the $x$-axis
+Changing the order in which the $x$-axis labels appear involves *redefining* the `Treatment` variable and specifying your desired order for the groups.  We can use the `factor()` command to accomplish this. 
+
+<details>
+<summary> $\blacktriangleright$ Optional information on *factors*.</summary>
+A *factor* is actually a "data type" in `R`; in other words, it's a specific way to store data.  The factor data type was designed with the purpose of working with categorical variables, like `Treatment`, and this is often how categorical data is stored in `R`.  The fact that we can *order the levels* of a factor is one feature that makes it ideal for this kind of work. 
+</details>
+
+### A simple example
+To explore how it works, consider the example where we have a vector called `birthdays` which stores the months in which some survey participants were born. To keep it simple, let's assume we only have three months in our data: `"Jan"`, `"Feb"`, or `"Mar"`.
+
+```{r echo = TRUE}
+birthdays
+```
+
+In `R` we want to store this as a factor variable so that we can impose a very specific order to the months: 
+
+<center> `"Jan"`, `"Feb"`, `"Mar"`.</center> <br>
+
+(*Note*: The default ordering would be alphabetical, which is nonsense when you look at it in a plot.)
+
+To impose this order, we would use the following command
+```{r echo = TRUE}
+factor(birthdays,
+        levels = c("Jan","Feb","Mar"))
+```
+
+Notice that in the output our colors appear in the desired order: `### Levels: Jan Feb Mar`.
+
+#### Exercise!
+We can define *any order* we want. Following the syntax above, create a factor variable from `birthdays` but with the levels ordered as `"Mar"`, `"Feb"`, `"Jan"`, like we are moving backward in time.
+
+```{r relevel-ex, exercise = TRUE, exercise.lines=4}
+factor(...,
+       levels = ...)
+```
+```{r relevel-ex-hint-1}
+factor(birthdays,
+       levels = ...)
+```
+```{r relevel-ex-hint-2}
+factor(birthdays,
+       levels = c("...","...","..."))
+```
+```{r relevel-ex-solution}
+factor(birthdays,
+       levels = c("Mar","Feb","Jan"))
+```
+
+### Modifying the `Treatment` variable
+To change the order of the `Treatment` groups on the $x$-axis, we actually have to modify the `Treatment` variable and re-assign an order for its levels (`"Control"`, `"wildtype"`, `"budB"`).
+
+A quick way to re-assign the order of our treatment groups is to use `mutate()` to recreate the `Treatment` variable, and use `factor()` to set a specific order, as we did above for `birthdays`.
+
+Consider the code below: 
+
+```
+plot_df %>%
+    mutate(Treatment = factor(Treatment,
+                              levels = ...)
+           ) -> plot_df2
+
+levels(plot_df2$Treatment)
+```
+
+* We start with `plot_df` and use `mutate()` to change the `Treatment` variable.
+* Inside the mutate command, we reassign `Treatment` to a new factor variable using the `factor()` command.  *We have left these details for you to complete soon!*
+* Notice `-> plot_df2` appears after the mutate command; this stores the *newly ordered* plotting data as `plot_df2`.
+* The last line of the provided code, `levels(plot_df2$Treatment)`, shows us the levels of the new `Treatment` variable in `plot_df2`. This allows us to check the new ordering.
+
+#### Exercise!
+Remembering that we want our labels to read `"Control"`, `"wildtype"`, then `"budB"`, complete the code below to re-order the levels of the `Treatment` variable. 
 
 
+```{r relevel-plot-df, exercise = TRUE, exercise.lines=8,exercise.setup="axes-setup"}
+plot_df %>%
+    mutate(Treatment = factor(Treatment,
+                              levels = ...)
+           ) -> plot_df2
 
-***
+levels(plot_df2$Treatment)
+```
+```{r relevel-plot-df-hint-1}
+plot_df %>%
+    mutate(Treatment = factor(Treatment,
+                              levels = c("...",
+                                         "...",
+                                         "...")
+                              )) -> plot_df2
+
+levels(plot_df2$Treatment)
+```
+```{r relevel-plot-df-solution}
+plot_df %>%
+    mutate(Treatment = factor(Treatment,
+                              levels = c("Control",
+                                         "wildtype",
+                                         "budB")
+                              )) -> plot_df2
+
+levels(plot_df2$Treatment)
+```
+**Answer check:** Did the output of `levels(plot_df2$Treatment)` put the groups in the desired order?
+
+To create our plot with the new order on the $x$-axis, just need to use `plot_df2` in the code we already generated.  Below we copied an pasted our ggplot-code already.  
+
+#### Exercise!
+Change the name of the data frame to `plot_df2` and see if the $x$-axis now appears in the correct order!
+
+```{r plot-df2, include =FALSE}
+experiment %>% 
+    filter(TimeGroup=="100hr") %>%
+    group_by(Treatment) %>%
+    summarize(average_pH = mean(pH),
+            std.dev_pH = sd(pH)) %>%
+    mutate(low = average_pH - 2*std.dev_pH,
+           high = average_pH + 2*std.dev_pH) -> plot_df
+
+plot_df %>% mutate(Treatment = factor(Treatment,
+                              levels = c("Control",
+                                         "wildtype",
+                                         "budB")))->plot_df2
+```
+
+```{r final-plot, exercise = TRUE, exercise.lines=9,exercise.setup="plot-df2"}
+ggplot(data = ...,  #<---- set the updated data frame!
+       aes(x = Treatment,
+           y = average_pH)) +
+    geom_col(aes(fill=Treatment))+
+    geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
+    labs(y="Average pH")+
+    scale_y_continuous(breaks = seq(0,7,by = 1))
+```
+
+#### Some Quick Notes
+* Ideally, we would have re-ordered the levels of `Treatment` during the "Preparing a plotting data frame" step of the process. But making plots is not always a linear process.  Now that we're aware of the work involved in re-ordering our $x$-axis though, we recommend choosing an order ahead of time and including this code in the step where you prepare your data for the plot.
+* There are other ways of re-ordering the levels of a factor variable.  Since `ggplot2` is part of the tidyverse, we recommend learning about the `fct_relevel()` command in the [`forcats` package](https://forcats.tidyverse.org/reference/fct_relevel.html).
+
 ***
 
 ***Excellent work!***
@@ -605,10 +739,10 @@ Notes, comments, summaries.
 #### Steps for making plot
 
 1. prepare the data frame
-2. set up axes and link plotting data
+2. link to the plotting data and set up the axes
 3. add geometries and potentially new aesthetics
 4. scale aesthetics
-5. add labels
+5. add axis labels and other modifications
 
 #### More options for this data!
 There is always more than one way to visualize data. Here are a few other options that might be decent choices for this experiment and its results.  Code for these plots can be found here (INSERT LINK HERE !!!)
@@ -684,16 +818,12 @@ experiment %>%
                y=measurements))+
     geom_boxplot(aes(fill=Treatment),alpha=.3,colour=NA)+
     geom_point(alpha=.3, position=position_jitter(width=.2))+
-    geom_segment(data = experiment %>%
-                    filter(TimeGroup=="100hr") %>%
-                    pivot_longer(
-                        cols=c("Lesion.mm","pH"),
-                        names_to="measurement_type",
-                        values_to="measurements"
-                    ) %>%
-                     group_by(measurement_type,Treatment) %>%
-                     summarise(meanMeas = mean(measurements)),
-                 aes(x = rep(c(2,3,1)-.4,2), xend = rep(c(2,3,1)+.4,2), y = meanMeas, yend=meanMeas,color=Treatment))+
+    stat_summary(fun=mean,
+                 geom="errorbar",
+                 aes(ymax = after_stat(y), 
+                     ymin = after_stat(y),
+                     color=Treatment),
+                 width = .75, linewidth=1.1)+
     facet_grid(rows=vars(measurement_type),
                scales="free_y",
                labeller = labeller(measurement_type=measurement_type.labs))+
@@ -741,7 +871,16 @@ experiment %>%
     # We need to add two new variables to control the 
     # start and stop heights of our error-bars.
     mutate(low = average_pH - 2*std.dev_pH,
-           high = average_pH + 2*std.dev_pH) -> plot_df
+           high = average_pH + 2*std.dev_pH,
+           
+           # Modify Treatment to put the levels in the 
+           # desired order.
+           Treatment = factor(Treatment,
+                              levels = c("Control",
+                                         "wildtype",
+                                         "budB")
+                             )
+                    ) -> plot_df
            
     # The ->plot_df saves our work under the name plot_df
     
