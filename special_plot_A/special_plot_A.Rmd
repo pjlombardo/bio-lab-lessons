@@ -33,6 +33,11 @@ details summary {
 li{
   margin: 10px 0;
 }
+
+.full-code { 
+    background-color: aliceblue;
+    border: 2px dodgerblue;
+}
 ```
 
 ## Understanding the experimental data
@@ -503,7 +508,7 @@ We want to make three modifications:
 1. We want better axis labels; specifically, we want the $y$-axis to be "Average pH". 
     * *Note:* figures in scientific reports do not have titles.
 2. We want the $y$-axis to have markings for the first 8 units of pH (i.e., it should be labeled 0, 1, 2, ...7).
-3. We want to re-order the Treatment groups on the $x$-axis so that `"Control"` appears first, followed by `"wildtype"` and then `"budB"`.
+3. We want to re-order the Treatment groups on the $x$-axis so that `"wildtype"` appears first, followed by `"budB"` and then `"Control"`.
 
 The first modification is straightforward, and simply involves adding `labs()` to the plot with arguments for `y`.  The second, involves *scaling* one of our aesthetics, namely `y`, which we can accomplish with `scale_y_continuous()`, since pH is measured on a continuous scale. 
 
@@ -511,7 +516,7 @@ Our third modification is the most involved, but we will walk through it in our 
 
 ### Changing axis labels
 
-Let's take care of our labels and title first. Run the code below to see what it does, and then modify the code to provide the appropriate labels and title.
+Let's take care of our $y$-axis label first. Run the code below to see what it does, and then modify the code to provide the appropriate label.
 ```{r labels, exercise = TRUE, exercise.lines=8, exercise.setup="axes-setup"}
 # add the fill aesthetic to the code below
 ggplot(data = plot_df,
@@ -530,7 +535,6 @@ ggplot(data = plot_df,
     geom_errorbar(aes(ymin=low, ymax =high), width = 0.1)+
     labs(y="Average pH")
 ```
-
 
 ### Scaling the $y$-axis
 When scaling a continuous aesthetic, like `y` which records pH, we use the following
@@ -635,9 +639,9 @@ factor(birthdays,
 ```
 
 ### Modifying the `Treatment` variable
-To change the order of the `Treatment` groups on the $x$-axis, we actually have to modify the `Treatment` variable and re-assign an order for its levels (`"Control"`, `"wildtype"`, `"budB"`).
+To change the order of the `Treatment` groups on the $x$-axis, we actually have to modify the `Treatment` variable and re-assign an order for its levels (`"wildtype"`, `"budB"`,`"Control"`).
 
-A quick way to re-assign the order of our treatment groups is to use `mutate()` to recreate the `Treatment` variable, and use `factor()` to set a specific order, as we did above for `birthdays`.
+A quick way to re-assign the order of our treatment groups is to use `mutate()` to *recreate* the `Treatment` variable, and use `factor()` to set a specific order, as we did above for `birthdays`.
 
 Consider the code below: 
 
@@ -656,7 +660,7 @@ levels(plot_df2$Treatment)
 * The last line of the provided code, `levels(plot_df2$Treatment)`, shows us the levels of the new `Treatment` variable in `plot_df2`. This allows us to check the new ordering.
 
 #### Exercise!
-Remembering that we want our labels to read `"Control"`, `"wildtype"`, then `"budB"`, complete the code below to re-order the levels of the `Treatment` variable. 
+Remembering that we want our labels to read `"wildtype"`, `"budB"`, then `"Control"`, complete the code below to re-order the levels of the `Treatment` variable. 
 
 
 ```{r relevel-plot-df, exercise = TRUE, exercise.lines=8,exercise.setup="axes-setup"}
@@ -680,9 +684,9 @@ levels(plot_df2$Treatment)
 ```{r relevel-plot-df-solution}
 plot_df %>%
     mutate(Treatment = factor(Treatment,
-                              levels = c("Control",
-                                         "wildtype",
-                                         "budB")
+                              levels = c("wildtype",
+                                         "budB",
+                                         "Control")
                               )) -> plot_df2
 
 levels(plot_df2$Treatment)
@@ -704,9 +708,9 @@ experiment %>%
            high = average.pH + 2*stddev.pH) -> plot_df
 
 plot_df %>% mutate(Treatment = factor(Treatment,
-                              levels = c("Control",
-                                         "wildtype",
-                                         "budB")))->plot_df2
+                              levels = c("wildtype",
+                                         "budB",
+                                         "Control")))->plot_df2
 ```
 
 ```{r final-plot, exercise = TRUE, exercise.lines=9,exercise.setup="plot-df2"}
@@ -769,20 +773,24 @@ experiment %>%
     summarize(average.pH = mean(pH),
             stddev.pH = sd(pH)) %>%
      mutate(low = average.pH - 2*stddev.pH,
-           high = average.pH + 2*stddev.pH) -> plot_df
+           high = average.pH + 2*stddev.pH,
+           Treatment = factor(Treatment, levels = c("wildtype",
+                                         "budB",
+                                         "Control")
+                              )) -> plot_df
            
 # Creating our plot
 g1<-ggplot(data = plot_df,     
        aes(x = Treatment, y = average.pH))+
     geom_col(aes(fill = Treatment))+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
+    labs(y="Average pH")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 g2<-ggplot(data = plot_df,     
        aes(x = Treatment, y = average.pH))+
     geom_col(aes(fill = Treatment),alpha = .6)+
     geom_errorbar(aes(ymin = low, ymax = high), width = 0.1)+
-    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
+    labs(y="Average pH")+
     scale_y_continuous(breaks = seq(0,7,by = 1))
 
 p1<-g1 + scale_fill_brewer(palette="Accent")+theme_bw()+labs(title="Adjust color schemes with `brewer`")
@@ -854,7 +862,7 @@ output$distPlot <- renderPlot({
 Links to related exercises and resources.
 
 ### All the code together
-```
+```{r class.source="full-code", echo=TRUE, results='hide'}
 # preparing the plot data frame
 experiment %>% 
     # keep only rows at the final time point (i.e., the end)
@@ -876,9 +884,9 @@ experiment %>%
            # Modify Treatment to put the levels in the 
            # desired order.
            Treatment = factor(Treatment,
-                              levels = c("Control",
-                                         "wildtype",
-                                         "budB")
+                              levels = c("wildtype",
+                                         "budB",
+                                         "Control")
                              )
                     ) -> plot_df
            
@@ -902,7 +910,7 @@ ggplot(data = plot_df,      # link to our plotting data
     
     # add y-axis label and title
     
-    labs(y="Average pH", title = "Leaf pH at 100 hours by Treatment")+
+    labs(y="Average pH")+
     
     # use breaks to define how we want to label the markings
     # on the y-axis
